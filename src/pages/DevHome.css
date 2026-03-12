@@ -1,0 +1,26 @@
+.dev-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.dev-home .dragon {
+  max-width: 500px;
+  width: 90%;
+  animation: fadeIn 10s ease-in forwards;
+  opacity: 0;
+}
+
+.dev-home .coming-soon {
+  margin: 0;
+  font-style: italic;
+  opacity: 0;
+  animation: fadeIn 3s ease-in 10s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,14 +1,22 @@
-import dragonImg from './assets/dragon.png'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home'
+import Dev from './pages/Dev'
+import DevHome from './pages/DevHome'
+import Workbench from './pages/Workbench'
+
+const isDev = import.meta.env.DEV
 
 function App() {
   return (
-    <div className="app">
-      <h1 className="title">Theatre of the Mind</h1>
-      <h2 className="subtitle">Fortune & Glory - Season Two</h2>
-      <img src={dragonImg} alt="Dragon" className="dragon" />
-      <p className="coming-soon">Coming soon...</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dev" element={<Dev />}>
+          <Route index element={<DevHome />} />
+        </Route>
+        {isDev && <Route path="/workbench" element={<Workbench />} />}
+      </Routes>
+    </BrowserRouter>
   )
 }
 
