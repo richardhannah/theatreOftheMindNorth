@@ -1,5 +1,6 @@
 import React from 'react';
 import './Recap.css';
+import WorldDate from '../components/WorldDate/WorldDate';
 
 import fortuneGlory from '../assets/recap/FortuneGlory.PNG';
 import monasteryfight from '../assets/recap/monasteryfight.png';
@@ -52,7 +53,7 @@ function Recap() {
       {/* Chapter 1: Bastards of the Broken Hall */}
       <div className="chapter">
         <h2>Bastards of the Broken Hall</h2>
-        <p><b>23/7/1000</b></p>
+        <p><b><WorldDate shortDate="23/7/1000" /></b></p>
         <img src={monasteryfight} alt="Monastery Fight" className="float-right" />
         <p>
           Ah, gather round, travellers, and let me tell you a tale of shadow and fire, of steel ringing in tight stone halls, and of Coltello's Crew—the bold, the reckless, the damned lucky.
@@ -82,7 +83,7 @@ function Recap() {
       {/* Chapter 2: Bones, Blood, and Drums */}
       <div className="chapter">
         <h2>Bones, Blood, and Drums</h2>
-        <p><b>22/7/1000</b></p>
+        <p><b><WorldDate shortDate="22/7/1000" /></b></p>
         <img src={wargrider} alt="Warg Rider" className="float-left" />
         <p>
           Gather ye close, good folk, and listen well, for the tale of Coltello's crew grows darker still. Across the wild waters of the River Shrill they ventured once more, braving the haunted slopes of the Hill, where shadows whisper and unseen eyes watch from the gloom. Steel was sharpened, torches prepared, yet no blade nor fire can guard against the workings of the unknown.
@@ -127,7 +128,7 @@ function Recap() {
       {/* Chapter 3: Guido's Fort */}
       <div className="chapter">
         <h2>Guido's Fort</h2>
-        <p><b>21/7/1000</b></p>
+        <p><b><WorldDate shortDate="21/7/1000" /></b></p>
         <img src={bats} alt="Bats" className="float-left" />
         <p>
           Fill your cups and lend your ears, good friends, for the tale I tell tonight hails from the shadow of the Hill, in that lonely place known as Guido's Fort. A rough hamlet perched above the roaring waters of the River Shrill, its people hard, their faces marked by lives carved from the cold stone of the Black Peaks. It was here that Coltello's brave crew, weary yet unbowed, paused to gather their strength and resolve for the quest ahead.
@@ -150,7 +151,7 @@ function Recap() {
       {/* Chapter 4: The Black Peaks */}
       <div className="chapter">
         <h2>The Black Peaks</h2>
-        <p><b>19/7/1000</b></p>
+        <p><b><WorldDate shortDate="19/7/1000" /></b></p>
         <img src={abdul} alt="Abdul Ibn Farooq" className="float-left" />
         <p>
           Gather 'round, for the saga continues, and the daring exploits of Coltello's crew echo through the wilds once more!
@@ -195,7 +196,7 @@ function Recap() {
       {/* Chapter 5: Widowmakers */}
       <div className="chapter">
         <h2>Widowmakers</h2>
-        <p><b>5/6/1000</b></p>
+        <p><b><WorldDate shortDate="5/6/1000" /></b></p>
         <img src={manor} alt="Manor" className="float-left" />
         <p>
           The soft knock at the door echoed in the stillness of the small stone cottage. Elise Blackhammer paused, her hands mid-fold over a piece of laundry, her brow furrowing at the unexpected sound. Visitors were rare this far from the center of Reedle, and the hour was late. The knock came again, firmer this time, insistent but measured.
@@ -279,7 +280,7 @@ function Recap() {
       {/* Chapter 6: Deal with the Devil */}
       <div className="chapter courier-new">
         <h2>Deal with the Devil</h2>
-        <p><b>4/6/1000</b></p>
+        <p><b><WorldDate shortDate="4/6/1000" /></b></p>
         <img src={pub} alt="Pub" className="float-left" />
         <p><b>Mission Report: Reedle Operations – Coltello's Crew</b></p>
         <img src={ballroom} alt="Ballroom" className="float-right" />
@@ -322,7 +323,7 @@ function Recap() {
       {/* Chapter 7: Shadows Reckoning */}
       <div className="chapter">
         <h2>Shadows Reckoning</h2>
-        <p><b>3/6/1000</b></p>
+        <p><b><WorldDate shortDate="3/6/1000" /></b></p>
         <img src={houndmaster} alt="Houndmaster" className="float-left" />
         <p>
           Gather 'round, and let me weave the tale of Poppy Tenpenny, Disenta Coltello, Alan of the Dale, and Auchter Ochle, who journeyed with the wagon train, as their comrades rode ahead to Reedle. For two days they traveled through the heart of Darokin, the road winding like a ribbon between fields and hills. As twilight cloaked the land, the companions made camp for the night, a fire crackling in the center, the distant hoot of owls their only company.
@@ -355,7 +356,7 @@ function Recap() {
       {/* Chapter 8: Enemy of my Enemy */}
       <div className="chapter">
         <h2>Enemy of my Enemy</h2>
-        <p><b>3/6/1000</b></p>
+        <p><b><WorldDate shortDate="3/6/1000" /></b></p>
         <img src={yara} alt="Seer Yara" className="float-left" />
         <p>
           Gather round, my friends, and let me tell you the tale of the brave souls who ventured forth ahead of their comrades, riding swift and true to the town of Reedle. For it was Stevarn, Jesqorel, Marius, and Shamir who took upon themselves the dangerous task of scouting the path and uncovering the dark secrets that lay hidden in the shadowed corners of that treacherous place.
@@ -394,7 +395,7 @@ function Recap() {
       {/* Chapter 9: Gold's fatal lure */}
       <div className="chapter">
         <h2>Gold's fatal lure</h2>
-        <p><b>3/5/1000</b></p>
+        <p><b><WorldDate shortDate="3/5/1000" /></b></p>
         <img src={wrestling} alt="Wrestling" className="float-left" />
         <p>
           In the aftermath of the explosion at the villa of Don Loricato, our intrepid adventurers staggered to their feet, ears ringing from the devastating blast. Jen Sorrorat, ever watchful, found himself staring down the barrel of Brosnin Fairfax's crossbow. Fear gripped Jen, suspecting betrayal, but Fairfax's aim was true, targeting an Iron Ring soldier climbing through a shattered window. With a swift motion, Fairfax thrust a journal into Jen's hands, whispering with urgency, "Get this to Vescovi, everything depends on it."
@@ -421,7 +422,7 @@ function Recap() {
       {/* Chapter 10: Coltello's crew */}
       <div className="chapter">
         <h2>Coltello's crew</h2>
-        <p><b>3/5/1000</b></p>
+        <p><b><WorldDate shortDate="3/5/1000" /></b></p>
         <img src={loricato} alt="Exploding villa" className="float-right" />
         <p>
           After their victorious battle against the Cult of Apophis at the Abbey of the Forlorn Sisters, the party tended to their wounds and set their sights eastwards towards Nemiston. Their journey took them through the dirt-poor and desolate hamlet of Fenhold, nestled against the crumbling walls of a derelict manor. Disenta Coltello had a mild altercation with the headman, who rudely suggested they move on. However, Stevarn showed kindness to a local child, gifting a piece of gold, which softened the bitterness of their departure.
@@ -456,7 +457,7 @@ function Recap() {
       {/* Chapter 11: Faith and Frenzy */}
       <div className="chapter">
         <h2>Faith and Frenzy</h2>
-        <p><b>28/4/1000</b></p>
+        <p><b><WorldDate shortDate="28/4/1000" /></b></p>
         <img src={apophis} alt="Cult of Apophis" className="float-left" />
         <p>
           In a tale woven from the threads of destiny and danger, our intrepid adventurers, bound by a dubious agreement with the shadowy Rennik, found themselves ensnared on a perilous path. Tasked with delivering a mysterious "package," their journey was abruptly entangled by violent confrontations with rival bandits under a threatening sky. With strategy and steel, the party repelled their assailants, securing a brief peace as they hastened their wagons along the winding roads.
@@ -482,7 +483,7 @@ function Recap() {
       {/* Chapter 12: Conspiracy at the Crossroads */}
       <div className="chapter">
         <h2>Conspiracy at the Crossroads</h2>
-        <p><b>24/4/1000 - 27/4/1000</b></p>
+        <p><b><WorldDate shortDate="24/4/1000" /> &ndash; <WorldDate shortDate="27/4/1000" /></b></p>
         <img src={sorceress} alt="Sorceress" className="float-left" />
         <p>
           Gather around, for this is the tale of a band of intrepid adventurers, each bound by fate's unyielding grip, their spirits tempered by recent trials yet ever driven by the quest for glory. The ensemble had just concluded their dealings with Clifton Caldwell and resolved, amid the threads of intrigue and the whispers of unease, to make their way back to the bustling hub of Crossroads Haven to resupply and plan their next move.
@@ -521,7 +522,7 @@ function Recap() {
       {/* Chapter 13: Caldwell's Castle Claims another */}
       <div className="chapter">
         <h2>Caldwell's Castle Claims another</h2>
-        <p><b>24/4/1000</b></p>
+        <p><b><WorldDate shortDate="24/4/1000" /></b></p>
         <img src={wight} alt="Wight" className="float-left" />
         <p>
           In the hallowed halls of yesteryear, where the echoes of valor and the whispers of the past intertwine, there unfolds a tale most extraordinary, of a band of adventurers, steadfast and true. Their spirits, unbroken by the harrowing encounter with the vile thouls, sought the solace of night's embrace, to mend their weariness and gird their hearts for the morrow's uncertain light. Yet, as dawn's first rays pierced the gloom of Castle Caldwell's ancient depths, Poppy Tenpenny and Marius De Sorin, bound by duties afar, parted ways with their comrades, leaving the mantle of discovery to be borne by those who remained.
@@ -551,7 +552,7 @@ function Recap() {
       {/* Chapter 14: Perils in the Depths of Castle Caldwell */}
       <div className="chapter">
         <h2>Perils in the Depths of Castle Caldwell</h2>
-        <p><b>23/4/1000</b></p>
+        <p><b><WorldDate shortDate="23/4/1000" /></b></p>
         <img src={thoul} alt="Thoul" className="float-left" />
         <p>
           The party, having successfully navigated the upper levels of Castle Caldwell, stood at the precipice of a new challenge: descending into the dungeon's lower levels. Expecting greater dangers and more mysterious discoveries, they decided to bolster their supplies for the journey ahead.
@@ -590,7 +591,7 @@ function Recap() {
       {/* Chapter 15: Unearthing the Secrets of Caldwell's Castle */}
       <div className="chapter">
         <h2>Unearthing the Secrets of Caldwell's Castle</h2>
-        <p><b>20/4/1000</b></p>
+        <p><b><WorldDate shortDate="20/4/1000" /></b></p>
         <img src={elena2} alt="Elena Moonshadow" className="float-left" />
         <p>
           After a night of hard-earned rest, following the intense battle with the formidable bugbear, the party awoke to a morning filled with intrigue and unanswered questions. Dal Gilad, the ever-vigilant elf, was the first to rise. As the first light of dawn filtered through the trees, he witnessed a curious and potentially sinister meeting. Clifton Caldwell, their somewhat enigmatic host, emerged from his pavilion and engaged in a private conversation with a man unfamiliar to the party. The man, who carried himself with an air of quiet confidence, was later identified as Castor Severus.
@@ -647,7 +648,7 @@ function Recap() {
       {/* Chapter 16: The Perils and Resolve at Castle Caldwell */}
       <div className="chapter">
         <h2>The Perils and Resolve at Castle Caldwell</h2>
-        <p><b>19/4/1000</b></p>
+        <p><b><WorldDate shortDate="19/4/1000" /></b></p>
         <img src={edelgard} alt="Edelgard" className="float-left" />
         <p>
           The last venture of our intrepid adventurers, Dal Gilad, Auchter Ochle, Stevarn, Disenta Coltella, and Marius De Sorin, was shadowed by sorrow as they mourned the loss of their valiant companion, Lysithea. She fell bravely in battle against goblins at the gate of Castle Caldwell, a loss that weighed heavily on their hearts.
@@ -680,7 +681,7 @@ function Recap() {
       {/* Chapter 17: Tragedy at Caldwell's Castle */}
       <div className="chapter">
         <h2>Tragedy at Caldwell's Castle</h2>
-        <p><b>18/4/1000</b></p>
+        <p><b><WorldDate shortDate="18/4/1000" /></b></p>
         <img src={lysitheavGrave} alt="Lysithea's Grave" className="center-img" />
         <p>
           The expedition having arrived at Caldwell's Castle struck their bargain with the eponymous merchant and set out on their first foray into the castle grounds. Quickly they discovered that the gateway to the castle itself was guarded by a band of vicious goblins.
@@ -710,7 +711,7 @@ function Recap() {
       {/* Chapter 18: The expedition Assembles */}
       <div className="chapter">
         <h2>The expedition Assembles</h2>
-        <p><b>15/4/1000</b></p>
+        <p><b><WorldDate shortDate="15/4/1000" /></b></p>
         <img src={auchterochle} alt="Auchter Ochle" className="float-left" />
         <p>
           In the town of Alleybrooke, a group of four companions gathered, brought together by fate and a shared sense of adventure. Each brought their unique skills and strengths to the party, forming a diverse and formidable team:
