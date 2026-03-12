@@ -1,6 +1,13 @@
+import dragonImg from './assets/dragon.png'
+import './App.css'
+
 function App() {
   return (
-    <h1>Hello World</h1>
+    <div className="app">
+      <h1 className="title">Theatre of the Mind</h1>
+      <h2 className="subtitle">Fortune & Glory - Season Two</h2>
+      <img src={dragonImg} alt="Dragon" className="dragon" />
+    </div>
   )
 }
 
