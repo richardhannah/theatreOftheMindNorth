@@ -1,0 +1,77 @@
+.recap {
+  max-width: 900px;
+  padding: 20px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.recap-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.recap-header img {
+  max-width: 500px;
+  width: 90%;
+}
+
+.recap-header h3 {
+  font-style: italic;
+  color: #666;
+}
+
+.chapter {
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.chapter h2 {
+  margin-bottom: 0.5rem;
+}
+
+.chapter p {
+  margin-bottom: 0.75rem;
+}
+
+.chapter img {
+  margin: 10px;
+  max-width: 300px;
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
+
+.banner {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.banner img {
+  max-width: 600px;
+  width: 90%;
+}
+
+.courier-new {
+  font-family: "Courier New", monospace;
+}
+
+.center-img {
+  display: block;
+  margin: 0 auto;
+  float: none;
+}
+
+@media (max-width: 600px) {
+  .chapter img.float-left,
+  .chapter img.float-right {
+    display: block;
+    float: none;
+    margin: 10px auto;
+    max-width: 100%;
+  }
+}
