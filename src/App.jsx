@@ -7,6 +7,7 @@ function App() {
       <h1 className="title">Theatre of the Mind</h1>
       <h2 className="subtitle">Fortune & Glory - Season Two</h2>
       <img src={dragonImg} alt="Dragon" className="dragon" />
+      <p className="coming-soon">Coming soon...</p>
     </div>
   )
 }

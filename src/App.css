@@ -20,8 +20,15 @@
 .dragon {
   max-width: 500px;
   width: 90%;
-  animation: fadeIn 5s ease-in forwards;
+  animation: fadeIn 10s ease-in forwards;
   opacity: 0;
+}
+
+.coming-soon {
+  margin: 0;
+  font-style: italic;
+  opacity: 0;
+  animation: fadeIn 3s ease-in 10s forwards;
 }
 
 @keyframes fadeIn {
