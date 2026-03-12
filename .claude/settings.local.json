@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd D:/projects/northflank/theatreOftheMindNorth && npm create vite@latest . -- --template react 2>&1)",
+      "Bash(cd D:/projects/northflank/theatreOftheMindNorth && npm create vite@latest temp-app -- --template react 2>&1 && mv temp-app/* temp-app/.* . 2>/dev/null; rm -rf temp-app)",
+      "Bash(cd D:/projects/northflank/theatreOftheMindNorth && npm install 2>&1)"
+    ]
+  }
+}
