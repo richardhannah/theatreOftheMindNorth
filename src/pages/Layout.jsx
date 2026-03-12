@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router-dom'
 import Header from '../components/Header/Header'
 
-function Dev() {
+function Layout() {
   return (
-    <div className="dev">
+    <div className="layout">
       <Header />
       <main>
         <Outlet />
@@ -12,4 +12,4 @@ function Dev() {
   )
 }
 
-export default Dev
+export default Layout

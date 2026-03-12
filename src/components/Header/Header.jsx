@@ -11,12 +11,12 @@ function Header() {
         </Link>
       </div>
       <nav className="header-menubar">
-        <Link to="/dev" className="menu-link">Home</Link>
-        <Link to="/dev/recap" className="menu-link">Recap</Link>
-        <Link to="/dev/house-rules" className="menu-link">House Rules</Link>
-        <Link to="/dev/map" className="menu-link">Map</Link>
-        <Link to="/dev/lore" className="menu-link">Lore</Link>
-        <Link to="/dev/weapon-mastery" className="menu-link">Weapon Mastery</Link>
+        <Link to="/" className="menu-link">Home</Link>
+        <Link to="/recap" className="menu-link">Recap</Link>
+        <Link to="/house-rules" className="menu-link">House Rules</Link>
+        <Link to="/map" className="menu-link">Map</Link>
+        <Link to="/lore" className="menu-link">Lore</Link>
+        <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
       </nav>
     </header>
   )
