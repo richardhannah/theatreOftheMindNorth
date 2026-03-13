@@ -7,7 +7,7 @@ const crawlParagraphs = [
   "Now, deep in the Black Peak Mountains, the crew presses onward to the ancient monastery above Guido's Fort, seeking the long-lost tomb of the pirate John Blackbeard and the legendary Stormchaser's compass that lies within....",
 ]
 
-function Workbench() {
+function TextCrawlPage() {
   return (
     <TextCrawl
       title="Fortune & Glory"
@@ -19,4 +19,4 @@ function Workbench() {
   )
 }
 
-export default Workbench
+export default TextCrawlPage
