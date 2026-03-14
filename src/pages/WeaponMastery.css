@@ -1,0 +1,81 @@
+.weapon-mastery {
+  max-width: 100%;
+  padding: 0 1rem 2rem;
+  text-align: left;
+}
+
+.weapon-mastery h1 {
+  text-align: center;
+}
+
+.wm-filters {
+  margin-bottom: 1.5rem;
+}
+
+.wm-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.wm-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.wm-search {
+  width: 300px;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 0.9rem;
+}
+
+.wm-table-wrapper {
+  overflow-x: auto;
+}
+
+.wm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.wm-table th {
+  background: var(--dark-parchment);
+  color: var(--deep-gold);
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 2px solid var(--antique-gold);
+  white-space: nowrap;
+}
+
+.wm-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--antique-gold);
+  vertical-align: top;
+}
+
+.wm-table tbody tr:hover {
+  background: #e8dbb8;
+}
+
+.wm-weapon-cell {
+  min-width: 180px;
+}
+
+.wm-weapon-name {
+  font-weight: bold;
+  color: var(--deep-gold);
+}
+
+.wm-table td div {
+  line-height: 1.6;
+}
