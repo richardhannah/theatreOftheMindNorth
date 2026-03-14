@@ -8,6 +8,7 @@ import Lore from './pages/Lore'
 import WeaponMastery from './pages/WeaponMastery'
 import TextCrawlPage from './pages/TextCrawlPage'
 import Workbench from './pages/Workbench'
+import DiceRoom from './pages/DiceRoom'
 
 const isDev = import.meta.env.DEV
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="lore" element={<Lore />} />
           <Route path="weapon-mastery" element={<WeaponMastery />} />
           <Route path="textcrawl" element={<TextCrawlPage />} />
+          <Route path="diceroom" element={<DiceRoom />} />
         </Route>
         {isDev && <Route path="/workbench" element={<Workbench />} />}
       </Routes>
