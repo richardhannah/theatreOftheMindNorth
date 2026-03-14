@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import './DiceRoom.css'
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8080'
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function DiceRoom() {
   const [messages, setMessages] = useState([])
