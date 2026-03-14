@@ -1,30 +1,88 @@
-.house-rules {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 16px 2rem;
+.houserules-page {
+  display: flex;
+  min-height: calc(100vh - 200px);
   text-align: left;
 }
 
-.house-rules h2 {
-  margin-top: 2rem;
+/* Sidebar */
+.houserules-sidebar {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid var(--antique-gold);
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.house-rules h3,
-.house-rules h4,
-.house-rules h5 {
+.houserules-nav-btn {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--antique-gold);
+}
+
+.houserules-nav-btn:hover {
+  background: var(--dark-parchment);
+}
+
+.houserules-nav-btn.active {
+  color: var(--deep-gold);
+  font-weight: bold;
+}
+
+/* Content */
+.houserules-content {
+  flex: 1;
+  padding: 1rem 2rem;
+}
+
+.houserules-content h1 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  line-height: 1.3;
+}
+
+.houserules-content h3 {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
 }
 
-.house-rules p {
-  margin-bottom: 0.75rem;
+.houserules-content h4,
+.houserules-content h5 {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
 }
 
-.house-rules ul {
+.houserules-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.houserules-content ul {
   margin: 0.5rem 0 1rem;
   padding-left: 2rem;
 }
 
-.house-rules li {
+.houserules-content li {
   margin-bottom: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .houserules-page {
+    flex-direction: column;
+  }
+
+  .houserules-sidebar {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--antique-gold);
+  }
 }
