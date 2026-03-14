@@ -3,14 +3,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: #e8dbb8;
 }
 
 .crawl-container {
   width: 100%;
   max-width: 1200px;
   aspect-ratio: 21 / 9;
-  background: white;
+  background: #e8dbb8;
   overflow: hidden;
   position: relative;
   display: flex;
@@ -27,7 +27,7 @@
 .crawl-tagline p {
   font-size: 1.8rem;
   font-style: italic;
-  color: black;
+  color: var(--dungeon-black);
 }
 
 @keyframes taglineFadeIn {
@@ -71,7 +71,7 @@
   left: 0;
   right: 0;
   height: 60%;
-  background: linear-gradient(to bottom, white 0%, white 30%, transparent 100%);
+  background: linear-gradient(to bottom, #e8dbb8 0%, #e8dbb8 30%, transparent 100%);
   z-index: 1;
 }
 
@@ -81,7 +81,7 @@
   left: 0;
   right: 0;
   height: 60%;
-  background: linear-gradient(to top, white 0%, white 30%, transparent 100%);
+  background: linear-gradient(to top, #e8dbb8 0%, #e8dbb8 30%, transparent 100%);
   z-index: 1;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .crawl-subtitle {
-  color: black;
+  color: var(--antique-gold);
   font-size: 1.2rem;
   letter-spacing: 0.3rem;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 }
 
 .crawl-text {
-  color: black;
+  color: var(--dungeon-black);
   font-size: 1.4rem;
   line-height: 1.8;
   font-weight: bold;

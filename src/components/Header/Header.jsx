@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import logo from '../../assets/WebsiteLogo1024.png'
+import headerBg from '../../assets/headerbackcomposite.png'
 import './Header.css'
 
 function Header() {
   return (
     <header className="header">
-      <div className="header-banner">
+      <div className="header-banner" style={{ backgroundImage: `url(${headerBg})` }}>
         <Link to="/">
           <img src={logo} alt="Theatre of the Mind" className="header-logo" />
         </Link>

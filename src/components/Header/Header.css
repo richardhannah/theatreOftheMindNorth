@@ -6,6 +6,9 @@
   display: flex;
   justify-content: center;
   padding: 1rem 0;
+  background-size: cover;
+  background-position: top left -300px;
+  background-repeat: no-repeat;
 }
 
 .header-logo {
@@ -17,21 +20,22 @@
   display: flex;
   justify-content: center;
   gap: 1rem;
-  border-top: 1px solid #333;
-  border-bottom: 1px solid #333;
+  border-top: 1px solid var(--antique-gold);
+  border-bottom: 1px solid var(--antique-gold);
   padding: 0.5rem 1rem;
   box-sizing: border-box;
 }
 
 .menu-link {
-  color: inherit;
+  color: var(--dungeon-black);
   text-decoration: none;
   padding: 0.4rem 1rem;
-  border: 1px solid #333;
+  border: 1px solid var(--antique-gold);
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .menu-link:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--deep-gold);
+  color: #fff;
 }

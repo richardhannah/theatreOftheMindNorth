@@ -17,7 +17,7 @@
 
 .recap-header h3 {
   font-style: italic;
-  color: #666;
+  color: var(--antique-gold);
 }
 
 .chapter {

@@ -1,0 +1,30 @@
+.house-rules {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 2rem;
+  text-align: left;
+}
+
+.house-rules h2 {
+  margin-top: 2rem;
+}
+
+.house-rules h3,
+.house-rules h4,
+.house-rules h5 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.house-rules p {
+  margin-bottom: 0.75rem;
+}
+
+.house-rules ul {
+  margin: 0.5rem 0 1rem;
+  padding-left: 2rem;
+}
+
+.house-rules li {
+  margin-bottom: 0.25rem;
+}
