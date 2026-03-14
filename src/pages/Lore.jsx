@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { loreItems, CAMPAIGN, WORLD, IMMORTALS } from './loreData'
+import { loreItems, CAMPAIGN, WORLD, IMMORTALS, MISC, ELDMIRE, NITHIAN } from './loreData'
 import WorldDate from '../components/WorldDate/WorldDate'
 import './Lore.css'
 
@@ -7,9 +7,12 @@ const categories = [
   { key: CAMPAIGN, label: 'Campaign', description: 'Lore found on the campaign trail' },
   { key: WORLD, label: 'World', description: 'Discover Mystara' },
   { key: IMMORTALS, label: 'Immortals', description: 'Knowledge of the Divine' },
+  { key: ELDMIRE, label: "Eldmire's Journal", description: 'Fragments of a lost journal' },
+  { key: NITHIAN, label: 'Nithian Archives', description: 'Ancient scrolls and records' },
+  { key: MISC, label: 'Miscellaneous', description: 'Notes, journals, and reference material' },
 ]
 
-const images = import.meta.glob('../assets/lore/*.png', { eager: true })
+const images = import.meta.glob('../assets/lore/*.{png,jpeg,jpg}', { eager: true })
 
 function getImage(filename) {
   if (!filename) return null
@@ -62,7 +65,13 @@ function Lore() {
         )}
         <div className="lore-text">
           {selected.content.split('\n\n').map((para, i) => (
-            <p key={i}>{para}</p>
+            <p key={i}>
+              {para.includes('\n')
+                ? para.split('\n').map((line, j) => (
+                    <span key={j}>{line}{j < para.split('\n').length - 1 && <br />}</span>
+                  ))
+                : para}
+            </p>
           ))}
         </div>
         {selected.image && (

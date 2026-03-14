@@ -1,6 +1,11 @@
+import { NEW_LORE } from './newLoreData'
+
 export const CAMPAIGN = 'campaign'
 export const WORLD = 'world'
 export const IMMORTALS = 'immortals'
+export const MISC = 'misc'
+export const ELDMIRE = 'eldmire'
+export const NITHIAN = 'nithian'
 
 export const loreItems = [
   {
@@ -192,4 +197,5 @@ export const loreItems = [
       "Socially, Ylaruam is a land of contrasts. The Emirates' nobility, known as the Efreeti, hold significant sway over the political landscape, while the commoners, or Alasiya, often turn to trade, craftsmanship, or the military for upward mobility. The Code of the Eternal Truth plays a vital role in maintaining social order and justice, with the Immortal Al-Kalim revered as the prophet who brought the Eternal Truth to the Ylari people.\n\n" +
       "In summary, the Emirates of Ylaruam are a testament to the resilience of its people and their ability to forge a vibrant, flourishing society amid the desert's challenges. It is a place where faith lights the way, tradition anchors the soul, and the sands of time bear witness to the enduring legacy of the Ylari.",
   },
+  ...NEW_LORE,
 ]
