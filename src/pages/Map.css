@@ -1,0 +1,46 @@
+.map-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: calc(100vh - 200px);
+}
+
+.map-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  margin: 1rem 0;
+  background: var(--dark-parchment);
+  border-radius: 25px;
+}
+
+.map-controls input[type="range"] {
+  width: 200px;
+}
+
+.map-viewer {
+  flex: 1;
+  overflow: hidden;
+  cursor: grab;
+  width: 100%;
+  position: relative;
+}
+
+.map-table {
+  border-collapse: collapse;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.map-table td {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  line-height: 0;
+}
+
+.map-tile {
+  display: block;
+}
