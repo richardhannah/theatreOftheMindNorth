@@ -18,6 +18,7 @@ function Header() {
         <Link to="/map" className="menu-link">Map</Link>
         <Link to="/lore" className="menu-link">Lore</Link>
         <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
+        <Link to="/diceroom" className="menu-link">Dice Room</Link>
       </nav>
     </header>
   )
