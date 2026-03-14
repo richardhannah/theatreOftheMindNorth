@@ -16,8 +16,10 @@ const ALL_CATEGORIES = [
 ]
 
 function WeaponMastery() {
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerms, setSearchTerms] = useState([])
   const [categories, setCategories] = useState([...ALL_CATEGORIES])
+  const [variant, setVariant] = useState(true)
 
   const toggleCategory = (cat) => {
     setCategories((prev) =>
@@ -25,8 +27,22 @@ function WeaponMastery() {
     )
   }
 
+  const addSearchTerm = (e) => {
+    if (e.key !== 'Enter') return
+    const term = searchInput.trim().toLowerCase()
+    if (term && !searchTerms.includes(term)) {
+      setSearchTerms((prev) => [...prev, term])
+    }
+    setSearchInput('')
+  }
+
+  const removeSearchTerm = (term) => {
+    setSearchTerms((prev) => prev.filter((t) => t !== term))
+  }
+
   const filtered = WEAPONMASTERY_DATA.filter((w) => {
-    const textMatch = w.weaponName.toLowerCase().includes(search.toLowerCase())
+    const name = w.weaponName.toLowerCase()
+    const textMatch = searchTerms.length === 0 || searchTerms.some((term) => name.includes(term))
     const catMatch = categories.includes(w.category)
     return textMatch && catMatch
   })
@@ -51,10 +67,42 @@ function WeaponMastery() {
         <input
           type="text"
           className="wm-search"
-          placeholder="Search by weapon name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Type a weapon name and press Enter..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={addSearchTerm}
         />
+        {searchTerms.length > 0 && (
+          <div className="wm-chips">
+            {searchTerms.map((term) => (
+              <span key={term} className="wm-chip">
+                {term}
+                <button className="wm-chip-remove" onClick={() => removeSearchTerm(term)}>x</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="wm-ruleset-toggle">
+          <span>Ruleset:</span>
+          <label className="wm-radio">
+            <input
+              type="radio"
+              name="ruleset"
+              checked={!variant}
+              onChange={() => setVariant(false)}
+            />
+            Classic
+          </label>
+          <label className="wm-radio">
+            <input
+              type="radio"
+              name="ruleset"
+              checked={variant}
+              onChange={() => setVariant(true)}
+            />
+            Fortune &amp; Glory
+          </label>
+        </div>
       </div>
 
       <div className="wm-table-wrapper">
@@ -74,7 +122,7 @@ function WeaponMastery() {
               <tr key={weapon.weaponName}>
                 <td className="wm-weapon-cell">
                   <div className="wm-weapon-name">{weapon.weaponName}</div>
-                  <div>Primary Target Type: {weapon.primary}</div>
+                  {!variant && <div>Primary Target Type: {weapon.primary}</div>}
                   <div>Attributes: {weapon.attributes.join(', ')}</div>
                   <div>Cost: {weapon.cost}</div>
                   <div>Encumbrance: {weapon.enc}</div>
@@ -94,14 +142,18 @@ function WeaponMastery() {
                 <td>
                   {weapon.masteries.map((m) => (
                     <div key={m.level}>
-                      P: {m.damage.primary}
-                      {m.damage.secondary !== 'Nil' && <> S: {m.damage.secondary}</>}
+                      {variant
+                        ? m.damage.primary
+                        : <>P: {m.damage.primary}{m.damage.secondary !== 'Nil' && <> S: {m.damage.secondary}</>}</>
+                      }
                     </div>
                   ))}
                 </td>
                 <td>
                   {weapon.masteries.map((m) => (
-                    <div key={m.level}>{m.defense}</div>
+                    <div key={m.level}>
+                      {variant ? m.defense.replace(/^[AHM]:\s*/, '') : m.defense}
+                    </div>
                   ))}
                 </td>
                 <td>

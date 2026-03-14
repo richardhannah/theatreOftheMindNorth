@@ -38,6 +38,53 @@
   font-size: 0.9rem;
 }
 
+.wm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.wm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--deep-gold);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.wm-chip-remove {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.wm-chip-remove:hover {
+  color: var(--parchment);
+}
+
+.wm-ruleset-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.wm-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
 .wm-table-wrapper {
   overflow-x: auto;
 }
