@@ -31,6 +31,7 @@ function App() {
             <Route path="weapon-mastery" element={<WeaponMastery />} />
             <Route path="textcrawl" element={<TextCrawlPage />} />
             <Route path="diceroom" element={<DiceRoom />} />
+            <Route path="vtt" element={<Workbench />} />
             <Route path="login" element={<Login />} />
             <Route path="admin" element={<Admin />} />
             <Route path="characters" element={<Characters />} />

@@ -21,7 +21,7 @@ function Header() {
         <Link to="/map" className="menu-link">Map</Link>
         <Link to="/lore" className="menu-link">Lore</Link>
         <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
-        <Link to="/diceroom" className="menu-link">Dice Room</Link>
+        <Link to="/vtt" className="menu-link">VTT</Link>
         {user && <Link to="/characters" className="menu-link">Characters</Link>}
         <span className="menu-spacer" />
         {user?.role === 'Admin' && (

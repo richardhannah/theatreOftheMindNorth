@@ -12,7 +12,7 @@ function DiceRoom() {
   const [nameSet, setNameSet] = useState(false)
   const { user } = useAuth()
   const connectionRef = useRef(null)
-  const bottomRef = useRef(null)
+  const messagesEndRef = useRef(null)
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
@@ -37,7 +37,7 @@ function DiceRoom() {
   }, [])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages])
 
   const send = (e) => {
@@ -74,8 +74,7 @@ function DiceRoom() {
   }
 
   return (
-    <div className="diceroom">
-      <h2>Dice Room</h2>
+    <div className="diceroom-fixed">
       <div className="diceroom-chat">
         <div className="diceroom-messages">
           {messages.map((m, i) => (
@@ -84,11 +83,10 @@ function DiceRoom() {
               {m.text}
             </div>
           ))}
-          <div ref={bottomRef} />
+          <div ref={messagesEndRef} />
         </div>
         <form onSubmit={send} className="diceroom-form">
           <input
-            autoFocus
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message or roll dice (#2d6+3)..."
