@@ -1,0 +1,128 @@
+.admin-page {
+  padding: 20px;
+  flex: 1;
+  text-align: left;
+}
+
+.admin-page h2 {
+  text-align: center;
+  color: var(--deep-gold);
+}
+
+.admin-forbidden {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--antique-gold);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+  font-weight: 500;
+}
+
+.admin-table tr:hover {
+  background: var(--dark-parchment);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.admin-btn:hover {
+  background: var(--antique-gold);
+  color: var(--parchment);
+}
+
+.admin-btn-danger {
+  background: var(--blood-crimson);
+  border-color: var(--blood-crimson);
+  color: #fff;
+}
+
+.admin-btn-danger:hover {
+  background: #a00000;
+}
+
+.admin-role-select {
+  padding: 6px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 14px;
+  font-family: var(--sans);
+}
+
+.admin-error {
+  color: var(--blood-crimson);
+  text-align: center;
+  margin: 8px 0;
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.admin-modal {
+  background: var(--parchment);
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  padding: 24px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-modal h3 {
+  margin: 0;
+}
+
+.admin-modal input {
+  padding: 10px 12px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  font-size: 16px;
+  background: var(--dark-parchment);
+  color: var(--dungeon-black);
+  font-family: var(--sans);
+}
+
+.admin-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

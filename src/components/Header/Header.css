@@ -48,6 +48,15 @@
   flex: 1;
 }
 
+.menu-link-admin {
+  background: var(--blood-crimson);
+  border-color: var(--blood-crimson);
+}
+
+.menu-link-admin:hover {
+  background: #a00000;
+}
+
 .menu-link-user {
   background: var(--worn-leather);
   border-color: var(--antique-gold);

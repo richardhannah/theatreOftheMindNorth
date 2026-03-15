@@ -11,6 +11,7 @@ import TextCrawlPage from './pages/TextCrawlPage'
 import Workbench from './pages/Workbench'
 import DiceRoom from './pages/DiceRoom'
 import Login from './pages/Login'
+import Admin from './pages/Admin'
 
 const isDev = import.meta.env.DEV
 
@@ -29,6 +30,7 @@ function App() {
             <Route path="textcrawl" element={<TextCrawlPage />} />
             <Route path="diceroom" element={<DiceRoom />} />
             <Route path="login" element={<Login />} />
+            <Route path="admin" element={<Admin />} />
           </Route>
           {isDev && <Route path="/workbench" element={<Workbench />} />}
         </Routes>
