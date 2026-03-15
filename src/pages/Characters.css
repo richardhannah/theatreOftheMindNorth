@@ -1,0 +1,126 @@
+.chars-page {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.chars-page h2 {
+  text-align: center;
+  color: var(--deep-gold);
+  margin-bottom: 16px;
+}
+
+.chars-error {
+  color: var(--blood-crimson);
+  text-align: center;
+  font-size: 14px;
+}
+
+.chars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.chars-empty {
+  text-align: center;
+  color: var(--antique-gold);
+  font-style: italic;
+  padding: 24px;
+}
+
+.chars-card {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--dark-parchment);
+}
+
+.chars-card-link {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--dungeon-black);
+  transition: background 0.15s;
+}
+
+.chars-card-link:hover {
+  background: var(--pale-gold);
+}
+
+.chars-card-name {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.chars-card-detail {
+  font-size: 14px;
+  color: var(--antique-gold);
+}
+
+.chars-card-delete {
+  padding: 14px 16px;
+  border: none;
+  border-left: 1px solid var(--antique-gold);
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chars-card-delete:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+.chars-create-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--antique-gold);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 15px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.chars-create-btn:hover {
+  background: var(--dark-parchment);
+}
+
+.chars-create-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chars-create-form .cs-input,
+.chars-create-form .cs-select {
+  flex: 1;
+}
+
+.chars-create-form .chars-create-btn {
+  width: auto;
+  padding: 8px 20px;
+  border-style: solid;
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+}
+
+.chars-cancel-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--sans);
+}

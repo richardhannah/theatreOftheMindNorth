@@ -12,6 +12,8 @@ import Workbench from './pages/Workbench'
 import DiceRoom from './pages/DiceRoom'
 import Login from './pages/Login'
 import Admin from './pages/Admin'
+import Characters from './pages/Characters'
+import CharacterSheetPage from './pages/CharacterSheetPage'
 
 const isDev = import.meta.env.DEV
 
@@ -31,6 +33,8 @@ function App() {
             <Route path="diceroom" element={<DiceRoom />} />
             <Route path="login" element={<Login />} />
             <Route path="admin" element={<Admin />} />
+            <Route path="characters" element={<Characters />} />
+            <Route path="characters/:characterId" element={<CharacterSheetPage />} />
           </Route>
           {isDev && <Route path="/workbench" element={<Workbench />} />}
         </Routes>

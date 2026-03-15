@@ -22,6 +22,7 @@ function Header() {
         <Link to="/lore" className="menu-link">Lore</Link>
         <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
         <Link to="/diceroom" className="menu-link">Dice Room</Link>
+        {user && <Link to="/characters" className="menu-link">Characters</Link>}
         <span className="menu-spacer" />
         {user?.role === 'Admin' && (
           <Link to="/admin" className="menu-link menu-link-admin">Admin</Link>

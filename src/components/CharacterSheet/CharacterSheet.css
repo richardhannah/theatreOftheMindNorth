@@ -1,0 +1,897 @@
+.cs {
+  padding: 12px 20px;
+  text-align: left;
+  width: 800px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Tabs */
+.cs-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--antique-gold);
+  padding-bottom: 0;
+}
+
+.cs-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--antique-gold);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: var(--dark-parchment);
+  color: var(--worn-leather);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  position: relative;
+  top: 2px;
+}
+
+.cs-tab:hover {
+  background: var(--pale-gold);
+}
+
+.cs-tab-active {
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+  border-color: var(--antique-gold);
+}
+
+.cs-tab-active:hover {
+  background: var(--worn-leather);
+}
+
+.cs-save-status {
+  margin-left: auto;
+  align-self: center;
+  font-size: 13px;
+  color: var(--pale-gold, #e8d5a3);
+  padding: 0 8px;
+}
+
+.cs-tab-content {
+  min-height: 200px;
+}
+
+.cs-section {
+  margin-bottom: 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cs-section-header {
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+  padding: 5px 14px;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cs-header-btn {
+  padding: 2px 10px;
+  border: 1px solid var(--pale-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--pale-gold);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  text-transform: none;
+}
+
+.cs-header-btn:hover {
+  background: var(--antique-gold);
+}
+
+.cs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.cs-row:last-child {
+  border-bottom: none;
+}
+
+.cs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.cs-field-narrow {
+  flex: 0 0 80px;
+  min-width: 80px;
+}
+
+.cs-field-wide {
+  flex: 2;
+  min-width: 200px;
+}
+
+.cs-label {
+  font-size: 12px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.cs-input {
+  padding: 5px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-family: var(--sans);
+}
+
+.cs-input:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+.cs-select {
+  padding: 5px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-family: var(--sans);
+}
+
+.cs-select:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+/* Ability scores grid */
+.cs-abilities {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  padding: 8px 14px;
+}
+
+.cs-ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  padding: 5px 4px;
+  background: var(--dark-parchment);
+}
+
+.cs-ability-label {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.cs-ability-input {
+  width: 48px;
+  text-align: center;
+  padding: 4px 4px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+.cs-ability-input:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+.cs-ability-mod {
+  font-size: 13px;
+  color: var(--worn-leather);
+  font-family: var(--mono);
+}
+
+/* Combat stats */
+.cs-combat {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 8px 14px;
+}
+
+.cs-combat-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cs-combat-label {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.cs-combat-value {
+  width: 56px;
+  text-align: center;
+  padding: 4px 4px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+.cs-combat-value:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+/* Saving throws */
+.cs-saves {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 8px 14px;
+}
+
+.cs-save {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  padding: 5px 4px;
+  background: var(--dark-parchment);
+}
+
+.cs-save-label {
+  font-size: 10px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.cs-save-input {
+  width: 44px;
+  text-align: center;
+  padding: 4px 4px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+.cs-save-input:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+/* Removable rows */
+.cs-row-removable {
+  align-items: flex-end;
+  position: relative;
+  padding-right: 60px;
+}
+
+.cs-store-btn {
+  position: absolute;
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cs-store-btn:hover {
+  background: var(--worn-leather);
+  color: var(--parchment);
+}
+
+.cs-retrieve-btn:hover {
+  background: var(--shadowed-green);
+  color: var(--parchment);
+}
+
+.cs-remove-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: var(--sans);
+  padding: 0;
+}
+
+.cs-remove-btn:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+/* Empty state */
+.cs-empty {
+  padding: 14px;
+  text-align: center;
+  color: var(--antique-gold);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Prepared spells */
+.cs-prepared-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.cs-prepared-row:last-child {
+  border-bottom: none;
+}
+
+.cs-prepared-cast {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.cs-prepared-level {
+  font-size: 12px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  font-weight: 500;
+  flex: 0 0 40px;
+}
+
+.cs-prepared-name {
+  flex: 1;
+  font-size: 15px;
+}
+
+.cs-prepared-spent {
+  font-size: 12px;
+  color: var(--blood-crimson);
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+.cs-cast-btn {
+  padding: 2px 12px;
+  border: 1px solid var(--blood-crimson);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.cs-cast-btn:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+.cs-reprepare-btn {
+  padding: 2px 12px;
+  border: 1px solid var(--shadowed-green);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--shadowed-green);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.cs-reprepare-btn:hover {
+  background: var(--shadowed-green);
+  color: var(--parchment);
+}
+
+.cs-remove-btn-inline {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: var(--sans);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.cs-remove-btn-inline:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+/* Spells two-column layout */
+.cs-spells-columns {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cs-spells-col {
+  flex: 1;
+  min-width: 0;
+  transition: flex 0.2s ease;
+}
+
+.cs-spells-col-collapsed {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.cs-collapse-btn {
+  background: none;
+  border: none;
+  color: var(--pale-gold);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.cs-spellbook-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.cs-spellbook-row:last-child {
+  border-bottom: none;
+}
+
+.cs-spellbook-name {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font-size: 14px;
+}
+
+.cs-spellbook-lvl {
+  width: 38px;
+  text-align: center;
+  padding: 3px 4px;
+  font-size: 14px;
+}
+
+.cs-prepare-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--shadowed-green);
+  border-radius: 3px;
+  background: var(--shadowed-green);
+  color: var(--parchment);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+
+.cs-prepare-btn:hover {
+  opacity: 0.85;
+}
+
+/* Stash selectors */
+.cs-stash-selectors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-stash-selector-label {
+  font-size: 11px;
+  color: var(--pale-gold);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.cs-stash-dropdown {
+  padding: 2px 6px;
+  border: 1px solid var(--pale-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+.cs-stash-arrow {
+  color: var(--pale-gold);
+  font-size: 14px;
+}
+
+
+.cs-treasure-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--dark-parchment);
+}
+
+/* Treasure three-column layout */
+.cs-treasure-layout {
+  display: flex;
+  gap: 0;
+  padding: 8px 14px;
+  align-items: flex-start;
+}
+
+.cs-treasure-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cs-treasure-transfer-col {
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.cs-treasure-col-header {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  text-align: center;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cs-treasure-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+}
+
+.cs-treasure-coin-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--antique-gold);
+  width: 24px;
+  text-align: right;
+}
+
+.cs-treasure-input {
+  width: 64px;
+  text-align: center;
+  padding: 4px 4px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+.cs-treasure-input:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+.cs-treasure-enc-row {
+  border-top: 1px solid var(--dark-parchment);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+.cs-treasure-enc {
+  width: 64px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--worn-leather);
+}
+
+.cs-treasure-arrow-row {
+  justify-content: center;
+  gap: 4px;
+}
+
+.cs-arrow-btn {
+  width: 28px;
+  height: 24px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  user-select: none;
+}
+
+.cs-arrow-btn:hover {
+  background: var(--worn-leather);
+  color: var(--parchment);
+}
+
+.cs-arrow-btn:active {
+  background: var(--antique-gold);
+  color: var(--parchment);
+}
+
+.cs-arrow-retrieve {
+  border-color: var(--shadowed-green);
+  color: var(--shadowed-green);
+}
+
+.cs-arrow-retrieve:hover {
+  background: var(--shadowed-green);
+  color: var(--parchment);
+}
+
+.cs-arrow-retrieve:active {
+  background: var(--shadowed-green);
+  color: var(--parchment);
+}
+
+/* Stash manager modal */
+.cs-stash-modal {
+  background: var(--parchment);
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  padding: 16px;
+  min-width: 340px;
+  max-width: 440px;
+}
+
+.cs-stash-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cs-stash-modal-header h3 {
+  margin: 0;
+}
+
+.cs-stash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cs-stash-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-stash-name-input {
+  flex: 1;
+  font-size: 14px;
+  padding: 6px 8px;
+}
+
+.cs-stash-summary {
+  font-size: 12px;
+  color: var(--antique-gold);
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+
+.cs-stash-add-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--antique-gold);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.cs-stash-add-btn:hover {
+  background: var(--dark-parchment);
+}
+
+/* Equipment columns */
+.cs-equip-columns {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cs-equip-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-equip-col-header {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.cs-equip-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.cs-equip-item:last-child {
+  border-bottom: none;
+}
+
+.cs-equip-item-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cs-equip-name {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font-size: 13px;
+}
+
+.cs-equip-qty {
+  width: 44px;
+  text-align: center;
+  padding: 3px 4px;
+  font-size: 13px;
+}
+
+.cs-equip-wt {
+  width: 44px;
+  text-align: center;
+  padding: 3px 4px;
+  font-size: 13px;
+}
+
+.cs-equip-item-actions {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.cs-equip-item-name {
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-equip-item-qty {
+  font-size: 12px;
+  color: var(--antique-gold);
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+
+.cs-treasure-stash-select {
+  padding: 2px 6px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 11px;
+  font-family: var(--sans);
+  max-width: 100px;
+}
+
+/* Encumbrance total (non-editable) */
+.cs-enc-total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+}
+
+/* Notes */
+.cs-notes-wrap {
+  padding: 8px 14px;
+}
+
+.cs-notes {
+  width: 100%;
+  min-height: 300px;
+  padding: 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-family: var(--sans);
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.cs-notes:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+@media (max-width: 1024px) {
+  .cs-abilities {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cs-combat {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cs-saves {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
