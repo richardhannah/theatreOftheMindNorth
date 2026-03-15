@@ -1,7 +1,8 @@
-import CharacterSheet from '../components/CharacterSheet/CharacterSheet'
+import VTT from '../components/VTT/VTT'
+import sampleMap from '../assets/vtt/sample.jpg'
 
 function Workbench() {
-  return <CharacterSheet />
+  return <VTT mapSrc={sampleMap} />
 }
 
 export default Workbench
