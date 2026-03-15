@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { useAuth } from '../auth/AuthContext'
 import './DiceRoom.css'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
@@ -9,6 +10,7 @@ function DiceRoom() {
   const [input, setInput] = useState('')
   const [name, setName] = useState('')
   const [nameSet, setNameSet] = useState(false)
+  const { user } = useAuth()
   const connectionRef = useRef(null)
   const bottomRef = useRef(null)
 
@@ -42,7 +44,7 @@ function DiceRoom() {
     e.preventDefault()
     if (!input.trim() || !connectionRef.current) return
 
-    const msg = { name, text: input.trim(), ts: Date.now(), isDiceRoll: false }
+    const msg = { name, playerName: user?.username || '', text: input.trim(), ts: Date.now(), isDiceRoll: false }
     setMessages((prev) => [...prev, msg])
     connectionRef.current.invoke('SendMessage', msg).catch(console.error)
     setInput('')
@@ -58,12 +60,12 @@ function DiceRoom() {
           }}
           className="diceroom-name-form"
         >
-          <h2>Enter your name</h2>
+          <h2>Enter your character name</h2>
           <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Adventurer name..."
+            placeholder="Character name..."
           />
           <button type="submit">Join</button>
         </form>
@@ -78,7 +80,7 @@ function DiceRoom() {
         <div className="diceroom-messages">
           {messages.map((m, i) => (
             <div key={i} className={`diceroom-msg${m.isDiceRoll ? ' dice-roll' : ''}`}>
-              <strong>{m.name}: </strong>
+              <strong>{m.name}{m.playerName ? ` [${m.playerName}]` : ''}: </strong>
               {m.text}
             </div>
           ))}
