@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import logo from '../../assets/WebsiteLogo1024.png'
 import headerBg from '../../assets/headerbackcomposite.png'
@@ -6,14 +6,18 @@ import './Header.css'
 
 function Header() {
   const { user } = useAuth()
+  const { pathname } = useLocation()
+  const compact = pathname === '/vtt'
 
   return (
     <header className="header">
-      <div className="header-banner" style={{ backgroundImage: `url(${headerBg})` }}>
-        <Link to="/">
-          <img src={logo} alt="Theatre of the Mind" className="header-logo" />
-        </Link>
-      </div>
+      {!compact && (
+        <div className="header-banner" style={{ backgroundImage: `url(${headerBg})` }}>
+          <Link to="/">
+            <img src={logo} alt="Theatre of the Mind" className="header-logo" />
+          </Link>
+        </div>
+      )}
       <nav className="header-menubar">
         <Link to="/" className="menu-link">Home</Link>
         <Link to="/recap" className="menu-link">Recap</Link>

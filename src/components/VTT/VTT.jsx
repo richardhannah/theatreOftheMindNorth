@@ -47,6 +47,15 @@ function VTT({ mapSrc }) {
   const [charNameSet, setCharNameSet] = useState(false)
   const chatMessagesRef = useRef(null)
 
+  // Command history
+  const CMD_HISTORY_KEY = 'vtt_command_history'
+  const cmdHistoryInitRef = useRef(() => {
+    try { return JSON.parse(localStorage.getItem(CMD_HISTORY_KEY)) || [] } catch { return [] }
+  })
+  const [commandHistory] = useState(() => cmdHistoryInitRef.current())
+  const historyIndexRef = useRef(-1)
+  const savedInputRef = useRef('')
+
   // SignalR connection
   const vtt = useVttConnection({
     onCounterAdded: (counter) => {
@@ -480,10 +489,38 @@ function VTT({ mapSrc }) {
   const sendChat = (e) => {
     e.preventDefault()
     if (!chatInput.trim()) return
-    const msg = { name: charName, playerName: user?.username || '', text: chatInput.trim(), ts: Date.now(), isDiceRoll: false }
+    const text = chatInput.trim()
+    // Add to command history
+    commandHistory.unshift(text)
+    if (commandHistory.length > 100) commandHistory.pop()
+    localStorage.setItem(CMD_HISTORY_KEY, JSON.stringify(commandHistory))
+    historyIndexRef.current = -1
+    savedInputRef.current = ''
+
+    const msg = { name: charName, playerName: user?.username || '', text, ts: Date.now(), isDiceRoll: false }
     setMessages((prev) => [...prev, msg])
     vtt.sendMessage(msg)
     setChatInput('')
+  }
+
+  const handleChatKeyDown = (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (historyIndexRef.current === -1) savedInputRef.current = chatInput
+      if (historyIndexRef.current < commandHistory.length - 1) {
+        historyIndexRef.current++
+        setChatInput(commandHistory[historyIndexRef.current])
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (historyIndexRef.current > 0) {
+        historyIndexRef.current--
+        setChatInput(commandHistory[historyIndexRef.current])
+      } else if (historyIndexRef.current === 0) {
+        historyIndexRef.current = -1
+        setChatInput(savedInputRef.current)
+      }
+    }
   }
 
   const zoomPct = Math.round(zoomRef.current * 100)
@@ -646,6 +683,7 @@ function VTT({ mapSrc }) {
                     autoFocus
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleChatKeyDown}
                     placeholder="Message or roll (#2d6+3)..."
                     className="vtt-chat-input"
                   />
