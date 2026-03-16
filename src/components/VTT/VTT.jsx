@@ -110,7 +110,7 @@ function VTT({ mapSrc }) {
       }
     },
     onMessage: (msg) => {
-      setMessages((prev) => [...prev, msg])
+      setMessages((prev) => [...prev.slice(-499), msg])
     },
   })
 
@@ -498,7 +498,7 @@ function VTT({ mapSrc }) {
     savedInputRef.current = ''
 
     const msg = { name: charName, playerName: user?.username || '', text, ts: Date.now(), isDiceRoll: false }
-    setMessages((prev) => [...prev, msg])
+    setMessages((prev) => [...prev.slice(-499), msg])
     vtt.sendMessage(msg)
     setChatInput('')
   }

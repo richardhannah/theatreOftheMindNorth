@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../auth/AuthContext'
+import { API_URL } from '../config'
 import './Admin.css'
-
-const API_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function Admin() {
   const { user } = useAuth()

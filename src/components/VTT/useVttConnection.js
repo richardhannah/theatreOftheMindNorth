@@ -1,27 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
+import { API_URL } from '../../config'
 
 export function useVttConnection({ onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage }) {
   const connectionRef = useRef(null)
   const [connected, setConnected] = useState(false)
 
+  // Store callbacks in refs so SignalR handlers always call the latest version
+  const cbRef = useRef({ onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage })
+  cbRef.current = { onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage }
+
   useEffect(() => {
     const connection = new HubConnectionBuilder()
-      .withUrl(`${SERVER_URL}/vttHub`)
+      .withUrl(`${API_URL}/vttHub`)
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)
       .build()
 
     connectionRef.current = connection
 
-    connection.on('CounterAdded', (counter) => onCounterAdded?.(counter))
-    connection.on('CounterMoved', (id, x, y) => onCounterMoved?.(id, x, y))
-    connection.on('CounterRemoved', (id) => onCounterRemoved?.(id))
-    connection.on('GridUpdated', (grid) => onGridUpdated?.(grid))
-    connection.on('FullState', (state) => onFullState?.(state))
-    connection.on('ReceiveMessage', (msg) => onMessage?.(msg))
+    connection.on('CounterAdded', (counter) => cbRef.current.onCounterAdded?.(counter))
+    connection.on('CounterMoved', (id, x, y) => cbRef.current.onCounterMoved?.(id, x, y))
+    connection.on('CounterRemoved', (id) => cbRef.current.onCounterRemoved?.(id))
+    connection.on('GridUpdated', (grid) => cbRef.current.onGridUpdated?.(grid))
+    connection.on('FullState', (state) => cbRef.current.onFullState?.(state))
+    connection.on('ReceiveMessage', (msg) => cbRef.current.onMessage?.(msg))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -37,7 +40,7 @@ export function useVttConnection({ onCounterAdded, onCounterMoved, onCounterRemo
     return () => {
       connection.stop()
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   const addCounter = (counter) => {
     connectionRef.current?.invoke('AddCounter', counter).catch(console.error)

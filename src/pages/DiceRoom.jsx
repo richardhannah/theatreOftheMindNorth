@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { useAuth } from '../auth/AuthContext'
+import { API_URL } from '../config'
 import './DiceRoom.css'
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function DiceRoom() {
   const [messages, setMessages] = useState([])
@@ -16,7 +15,7 @@ function DiceRoom() {
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
-      .withUrl(`${SERVER_URL}/chatHub`)
+      .withUrl(`${API_URL}/chatHub`)
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)
       .build()
@@ -24,7 +23,7 @@ function DiceRoom() {
     connectionRef.current = connection
 
     connection.on('ReceiveMessage', (msg) => {
-      setMessages((prev) => [...prev, msg])
+      setMessages((prev) => [...prev.slice(-499), msg])
     })
 
     connection.onclose(() => console.log('Disconnected'))
@@ -45,7 +44,7 @@ function DiceRoom() {
     if (!input.trim() || !connectionRef.current) return
 
     const msg = { name, playerName: user?.username || '', text: input.trim(), ts: Date.now(), isDiceRoll: false }
-    setMessages((prev) => [...prev, msg])
+    setMessages((prev) => [...prev.slice(-499), msg])
     connectionRef.current.invoke('SendMessage', msg).catch(console.error)
     setInput('')
   }

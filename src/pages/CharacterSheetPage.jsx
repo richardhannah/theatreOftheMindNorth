@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { API_URL } from '../config'
 import CharacterSheet from '../components/CharacterSheet/CharacterSheet'
-
-const API_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function CharacterSheetPage() {
   const { characterId } = useParams()
