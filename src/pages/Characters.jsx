@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { API_URL } from '../config'
+import InitialsToken from '../components/TokenPicker/InitialsToken'
+import tokens from '../components/VTT/tokens'
 import './Characters.css'
+
+const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
 
 function Characters() {
   const { user } = useAuth()
@@ -88,6 +92,11 @@ function Characters() {
         {characters.map((c) => (
           <div key={c.characterId} className="chars-card">
             <Link to={`/characters/${c.characterId}`} className="chars-card-link">
+              {c.tokenId && tokenSrcMap[c.tokenId] ? (
+                <img src={tokenSrcMap[c.tokenId]} alt="" className="chars-card-token" />
+              ) : (
+                <InitialsToken name={c.name || '?'} size={32} />
+              )}
               <span className="chars-card-name">{c.name || 'Unnamed'}</span>
               <span className="chars-card-detail">
                 {c.class ? `Level ${c.level} ${c.class}` : 'New Character'}

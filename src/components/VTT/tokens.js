@@ -1,4 +1,4 @@
-const tokenModules = import.meta.glob('../../assets/vtt/*.png', { eager: true, import: 'default' })
+const tokenModules = import.meta.glob('../../assets/vtt/tokens/*.png', { eager: true, import: 'default' })
 
 const tokens = Object.entries(tokenModules).map(([path, src]) => {
   const filename = path.split('/').pop().replace('.png', '')

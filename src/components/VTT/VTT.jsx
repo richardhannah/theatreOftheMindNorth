@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import tokens from './tokens'
+import maps from './maps'
 import { useVttConnection } from './useVttConnection'
 import { useAuth } from '../../auth/AuthContext'
+import { API_URL } from '../../config'
+import InitialsToken from '../TokenPicker/InitialsToken'
 import './VTT.css'
 
 const MIN_ZOOM = 0.25
@@ -18,11 +21,13 @@ function loadGridSettings() {
   return null
 }
 
-// Build a token src lookup from the tokens list
+// Lookups
 const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
+const mapSrcMap = Object.fromEntries(maps.map((m) => [m.id, m.src]))
 
-function VTT({ mapSrc }) {
+function VTT() {
   const { user } = useAuth()
+  const isDM = user?.role === 'Admin'
   const [, forceRender] = useState(0)
   const savedGrid = useRef(loadGridSettings())
   const [gridW, setGridW] = useState(savedGrid.current?.gridW ?? 20)
@@ -36,16 +41,78 @@ function VTT({ mapSrc }) {
   const [showGridPanel, setShowGridPanel] = useState(false)
   const [showCounterTray, setShowCounterTray] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [showScenePanel, setShowScenePanel] = useState(false)
   const [counters, setCounters] = useState([])
   const [trayFilter, setTrayFilter] = useState('')
   const counterIdRef = useRef(0)
 
+  // Scene state
+  const [scenes, setScenes] = useState([])
+  const [activeSceneId, setActiveSceneId] = useState('')
+  const [activeMapId, setActiveMapId] = useState('')
+  const [newSceneName, setNewSceneName] = useState('')
+  const [newSceneMap, setNewSceneMap] = useState(maps[0]?.id || '')
+  const sceneDirtyRef = useRef(false)
+
+  // Mark scenes dirty on any scene/counter/grid change
+  const markScenesDirty = () => { sceneDirtyRef.current = true }
+
+  // Persist scenes to backend every 10s if dirty (DM only)
+  useEffect(() => {
+    if (!isDM || !user) return
+    const interval = setInterval(() => {
+      if (!sceneDirtyRef.current) return
+      sceneDirtyRef.current = false
+
+      // Build scene entities from the VttHub's in-memory state via the scenes list
+      // We need to read current counters/grid for the active scene from local state
+      const sceneEntities = scenes.map((s) => {
+        const isActive = s.id === activeSceneId
+        return {
+          sceneId: s.id,
+          name: s.name,
+          mapId: s.mapId,
+          gridW: isActive ? gridW : 20,
+          gridH: isActive ? gridH : 20,
+          gridOffsetX: isActive ? gridOffset.x : 0,
+          gridOffsetY: isActive ? gridOffset.y : 0,
+          gridColor: isActive ? gridColor : '#ffffff',
+          gridOpacity: isActive ? gridOpacity : 0.15,
+          gridThickness: isActive ? gridThickness : 1,
+          counters: isActive ? JSON.stringify(counters.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
+          nextCounterId: isActive ? counterIdRef.current : 0,
+          isActive,
+        }
+      })
+
+      fetch(`${API_URL}/api/scenes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+        body: JSON.stringify(sceneEntities),
+      }).catch(() => { sceneDirtyRef.current = true })
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [isDM, user, scenes, activeSceneId, gridW, gridH, gridOffset, gridColor, gridOpacity, gridThickness, counters])
+
   // Chat state
   const [messages, setMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [charName, setCharName] = useState('')
-  const [charNameSet, setCharNameSet] = useState(false)
+  const [charName, setCharName] = useState(() => localStorage.getItem('vtt_char_name') || '')
+  const [charTokenId, setCharTokenId] = useState(() => localStorage.getItem('vtt_char_token') || '')
+  const [charNameSet, setCharNameSet] = useState(() => !!localStorage.getItem('vtt_char_name'))
+  const [chatCharacters, setChatCharacters] = useState([])
   const chatMessagesRef = useRef(null)
+
+  // Load characters for chat name picker
+  useEffect(() => {
+    if (!user) return
+    fetch(`${API_URL}/api/characters`, {
+      headers: { 'Authorization': `Bearer ${user.token}` },
+    })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setChatCharacters(data || []))
+      .catch(() => {})
+  }, [user])
 
   // Command history
   const CMD_HISTORY_KEY = 'vtt_command_history'
@@ -90,29 +157,55 @@ function VTT({ mapSrc }) {
       setGridThickness(grid.gridThickness)
     },
     onFullState: (state) => {
-      const resolved = state.counters.map((c) => ({
-        id: c.id,
-        tokenId: c.tokenId,
-        src: tokenSrcMap[c.tokenId] || '',
-        label: c.label,
-        x: c.x,
-        y: c.y,
-      }))
-      setCounters(resolved)
-      counterIdRef.current = state.nextCounterId || 0
-      if (state.grid?.gridW) {
-        setGridW(state.grid.gridW)
-        setGridH(state.grid.gridH)
-        setGridOffset({ x: state.grid.offsetX, y: state.grid.offsetY })
-        setGridColor(state.grid.gridColor)
-        setGridOpacity(state.grid.gridOpacity)
-        setGridThickness(state.grid.gridThickness)
+      setScenes(state.scenes || [])
+      setActiveSceneId(state.activeSceneId || '')
+      if (state.scene) {
+        loadScene(state.scene)
       }
+    },
+    onSceneCreated: (scene) => {
+      setScenes((prev) => [...prev, { id: scene.id, name: scene.name, mapId: scene.mapId }])
+      markScenesDirty()
+    },
+    onSceneSwitched: (scene) => {
+      setActiveSceneId(scene.id)
+      loadScene(scene)
+      markScenesDirty()
+    },
+    onSceneDeleted: (sceneId) => {
+      setScenes((prev) => prev.filter((s) => s.id !== sceneId))
+      setActiveSceneId((prev) => prev === sceneId ? '' : prev)
+      markScenesDirty()
     },
     onMessage: (msg) => {
       setMessages((prev) => [...prev.slice(-499), msg])
     },
   })
+
+  const loadScene = (scene) => {
+    loadingSceneRef.current = true
+    setActiveMapId(scene.mapId || '')
+    const resolved = (scene.counters || []).map((c) => ({
+      id: c.id,
+      tokenId: c.tokenId,
+      src: tokenSrcMap[c.tokenId] || '',
+      label: c.label,
+      x: c.x,
+      y: c.y,
+    }))
+    setCounters(resolved)
+    counterIdRef.current = scene.nextCounterId || 0
+    if (scene.grid?.gridW) {
+      setGridW(scene.grid.gridW)
+      setGridH(scene.grid.gridH)
+      setGridOffset({ x: scene.grid.offsetX, y: scene.grid.offsetY })
+      setGridColor(scene.grid.gridColor)
+      setGridOpacity(scene.grid.gridOpacity)
+      setGridThickness(scene.grid.gridThickness)
+    }
+    // Allow sync again after React has processed the state updates
+    requestAnimationFrame(() => { loadingSceneRef.current = false })
+  }
 
   // Auto-scroll chat
   useEffect(() => {
@@ -121,20 +214,27 @@ function VTT({ mapSrc }) {
   }, [messages])
 
   // Persist grid settings locally
+  const loadingSceneRef = useRef(false)
+
   useEffect(() => {
     localStorage.setItem(VTT_GRID_KEY, JSON.stringify({
       gridW, gridH, gridLinked, gridOffset, gridColor, gridOpacity, gridThickness,
     }))
   }, [gridW, gridH, gridLinked, gridOffset, gridColor, gridOpacity, gridThickness])
 
-  // Broadcast grid changes
-  const broadcastGrid = () => {
-    vtt.updateGrid({
-      gridW, gridH,
-      offsetX: gridOffset.x, offsetY: gridOffset.y,
-      gridColor, gridOpacity, gridThickness,
-    })
-  }
+  // Sync grid to server when grid panel closes
+  const prevShowGridPanel = useRef(showGridPanel)
+  useEffect(() => {
+    if (prevShowGridPanel.current && !showGridPanel && !loadingSceneRef.current) {
+      vtt.updateGrid({
+        gridW, gridH,
+        offsetX: gridOffset.x, offsetY: gridOffset.y,
+        gridColor, gridOpacity, gridThickness,
+      })
+      markScenesDirty()
+    }
+    prevShowGridPanel.current = showGridPanel
+  }, [showGridPanel])
 
   const handleGridW = (val) => {
     const v = Number(val)
@@ -322,6 +422,7 @@ function VTT({ mapSrc }) {
         ))
         // Broadcast the new counter at its final position
         vtt.addCounter({ id: newId, tokenId: token.id, label: token.label, x: snapped.x, y: snapped.y })
+        markScenesDirty()
       }
       counterDragRef.current = null
       setDraggingCounterId(null)
@@ -372,6 +473,7 @@ function VTT({ mapSrc }) {
         ))
         // Broadcast the move
         vtt.moveCounter(counterId, snapped.x, snapped.y)
+        markScenesDirty()
       }
       counterDragRef.current = null
       setDraggingCounterId(null)
@@ -386,6 +488,7 @@ function VTT({ mapSrc }) {
   const removeCounter = (counterId) => {
     setCounters((prev) => prev.filter((c) => c.id !== counterId))
     vtt.removeCounter(counterId)
+    markScenesDirty()
   }
 
   // Center the map when it loads
@@ -497,7 +600,7 @@ function VTT({ mapSrc }) {
     historyIndexRef.current = -1
     savedInputRef.current = ''
 
-    const msg = { name: charName, playerName: user?.username || '', text, ts: Date.now(), isDiceRoll: false }
+    const msg = { name: charName, playerName: user?.username || '', tokenId: charTokenId, text, ts: Date.now(), isDiceRoll: false }
     setMessages((prev) => [...prev.slice(-499), msg])
     vtt.sendMessage(msg)
     setChatInput('')
@@ -546,6 +649,18 @@ function VTT({ mapSrc }) {
         >
           {showChat ? 'Hide Chat' : 'Show Chat'}
         </button>
+        {isDM && (
+          <button
+            className={`vtt-grid-lock-btn${showScenePanel ? ' vtt-link-active' : ''}`}
+            onClick={() => setShowScenePanel(!showScenePanel)}
+          >
+            Scenes
+          </button>
+        )}
+        <span className="vtt-toolbar-sep" />
+        <span className="vtt-toolbar-label">
+          {activeSceneId ? scenes.find((s) => s.id === activeSceneId)?.name || '' : 'No scene'}
+        </span>
         <span className="vtt-toolbar-sep" />
         <span className="vtt-toolbar-label">
           {vtt.connected ? 'Connected' : 'Disconnected'}
@@ -593,9 +708,48 @@ function VTT({ mapSrc }) {
             >
               {gridDecoupled ? 'Lock Grid' : 'Adjust Grid'}
             </button>
-            <button className="vtt-grid-lock-btn" onClick={broadcastGrid}>
-              Sync Grid
-            </button>
+          </div>
+        </div>
+      )}
+      {showScenePanel && isDM && (
+        <div className="vtt-scene-panel">
+          <div className="vtt-scene-list">
+            {scenes.map((s) => (
+              <div key={s.id} className={`vtt-scene-item${s.id === activeSceneId ? ' vtt-scene-active' : ''}`}>
+                <button className="vtt-scene-select" onClick={() => vtt.switchScene(s.id)}>
+                  {s.name}
+                </button>
+                <button className="vtt-scene-delete" onClick={() => {
+                  if (confirm(`Delete scene "${s.name}"?`)) vtt.deleteScene(s.id)
+                }}>x</button>
+              </div>
+            ))}
+          </div>
+          <div className="vtt-scene-create">
+            <input
+              className="vtt-scene-input"
+              value={newSceneName}
+              onChange={(e) => setNewSceneName(e.target.value)}
+              placeholder="Scene name..."
+            />
+            <select
+              className="vtt-scene-map-select"
+              value={newSceneMap}
+              onChange={(e) => setNewSceneMap(e.target.value)}
+            >
+              {maps.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+            <button
+              className="vtt-scene-create-btn"
+              onClick={() => {
+                if (!newSceneName.trim()) return
+                const id = crypto.randomUUID()
+                vtt.createScene(id, newSceneName.trim(), newSceneMap)
+                setNewSceneName('')
+              }}
+            >+ Create</button>
           </div>
         </div>
       )}
@@ -604,7 +758,9 @@ function VTT({ mapSrc }) {
         ref={viewportRef}
       >
         <div className="vtt-canvas" ref={canvasRef}>
-          <img src={mapSrc} alt="Map" onLoad={onMapLoad} draggable={false} />
+          {(mapSrcMap[activeMapId] || activeMapId) && (
+            <img src={mapSrcMap[activeMapId] || activeMapId} alt="Map" onLoad={onMapLoad} draggable={false} />
+          )}
           <div
             className="vtt-grid"
             ref={gridRef}
@@ -658,21 +814,58 @@ function VTT({ mapSrc }) {
         {showChat && (
           <div className="vtt-chat">
             {!charNameSet ? (
-              <form className="vtt-chat-name-form" onSubmit={(e) => { e.preventDefault(); if (charName.trim()) setCharNameSet(true) }}>
-                <input
-                  autoFocus
-                  value={charName}
-                  onChange={(e) => setCharName(e.target.value)}
-                  placeholder="Character name..."
-                  className="vtt-chat-input"
-                />
-                <button type="submit" className="vtt-chat-send">Join</button>
-              </form>
+              <div className="vtt-chat-join">
+                {user && chatCharacters.length > 0 && (
+                  <div className="vtt-chat-char-list">
+                    {chatCharacters.map((c) => (
+                      <button
+                        key={c.characterId}
+                        className="vtt-chat-char-btn"
+                        onClick={() => {
+                          setCharName(c.name); setCharTokenId(c.tokenId || ''); setCharNameSet(true)
+                          localStorage.setItem('vtt_char_name', c.name)
+                          localStorage.setItem('vtt_char_token', c.tokenId || '')
+                        }}
+                      >
+                        {c.tokenId && tokenSrcMap[c.tokenId] ? (
+                          <img src={tokenSrcMap[c.tokenId]} alt="" className="vtt-chat-char-token" />
+                        ) : (
+                          <InitialsToken name={c.name || '?'} size={24} />
+                        )}
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <form className="vtt-chat-name-form" onSubmit={(e) => { e.preventDefault(); if (charName.trim()) { setCharNameSet(true); localStorage.setItem('vtt_char_name', charName.trim()) } }}>
+                  <input
+                    autoFocus
+                    value={charName}
+                    onChange={(e) => setCharName(e.target.value)}
+                    placeholder={user ? 'Or enter a name...' : 'Character name...'}
+                    className="vtt-chat-input"
+                  />
+                  <button type="submit" className="vtt-chat-send">Join</button>
+                </form>
+              </div>
             ) : (
               <>
+                <div className="vtt-chat-header">
+                  <span className="vtt-chat-header-name">{charName}</span>
+                  <button className="vtt-chat-reset" onClick={() => {
+                    setCharName(''); setCharTokenId(''); setCharNameSet(false)
+                    localStorage.removeItem('vtt_char_name')
+                    localStorage.removeItem('vtt_char_token')
+                  }}>Switch</button>
+                </div>
                 <div className="vtt-chat-messages" ref={chatMessagesRef}>
                   {messages.map((m, i) => (
                     <div key={i} className={`vtt-chat-msg${m.isDiceRoll ? ' vtt-chat-dice' : ''}`}>
+                      {m.tokenId && tokenSrcMap[m.tokenId] ? (
+                        <img src={tokenSrcMap[m.tokenId]} alt="" className="vtt-chat-msg-token" />
+                      ) : (
+                        <InitialsToken name={m.name || '?'} size={20} />
+                      )}
                       <strong>{m.name}{m.playerName ? ` [${m.playerName}]` : ''}: </strong>
                       {m.text}
                     </div>

@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { API_URL } from '../../config'
 
-export function useVttConnection({ onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage }) {
+export function useVttConnection(callbacks) {
   const connectionRef = useRef(null)
   const [connected, setConnected] = useState(false)
 
-  // Store callbacks in refs so SignalR handlers always call the latest version
-  const cbRef = useRef({ onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage })
-  cbRef.current = { onCounterAdded, onCounterMoved, onCounterRemoved, onGridUpdated, onFullState, onMessage }
+  const cbRef = useRef(callbacks)
+  cbRef.current = callbacks
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
@@ -25,6 +24,9 @@ export function useVttConnection({ onCounterAdded, onCounterMoved, onCounterRemo
     connection.on('GridUpdated', (grid) => cbRef.current.onGridUpdated?.(grid))
     connection.on('FullState', (state) => cbRef.current.onFullState?.(state))
     connection.on('ReceiveMessage', (msg) => cbRef.current.onMessage?.(msg))
+    connection.on('SceneCreated', (scene) => cbRef.current.onSceneCreated?.(scene))
+    connection.on('SceneSwitched', (scene) => cbRef.current.onSceneSwitched?.(scene))
+    connection.on('SceneDeleted', (sceneId) => cbRef.current.onSceneDeleted?.(sceneId))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -42,25 +44,14 @@ export function useVttConnection({ onCounterAdded, onCounterMoved, onCounterRemo
     }
   }, [])
 
-  const addCounter = (counter) => {
-    connectionRef.current?.invoke('AddCounter', counter).catch(console.error)
-  }
+  const addCounter = (counter) => connectionRef.current?.invoke('AddCounter', counter).catch(console.error)
+  const moveCounter = (id, x, y) => connectionRef.current?.invoke('MoveCounter', id, x, y).catch(console.error)
+  const removeCounter = (id) => connectionRef.current?.invoke('RemoveCounter', id).catch(console.error)
+  const updateGrid = (grid) => connectionRef.current?.invoke('UpdateGrid', grid).catch(console.error)
+  const sendMessage = (msg) => connectionRef.current?.invoke('SendMessage', msg).catch(console.error)
+  const createScene = (id, name, mapId) => connectionRef.current?.invoke('CreateScene', id, name, mapId).catch(console.error)
+  const switchScene = (sceneId) => connectionRef.current?.invoke('SwitchScene', sceneId).catch(console.error)
+  const deleteScene = (sceneId) => connectionRef.current?.invoke('DeleteScene', sceneId).catch(console.error)
 
-  const moveCounter = (id, x, y) => {
-    connectionRef.current?.invoke('MoveCounter', id, x, y).catch(console.error)
-  }
-
-  const removeCounter = (id) => {
-    connectionRef.current?.invoke('RemoveCounter', id).catch(console.error)
-  }
-
-  const updateGrid = (grid) => {
-    connectionRef.current?.invoke('UpdateGrid', grid).catch(console.error)
-  }
-
-  const sendMessage = (msg) => {
-    connectionRef.current?.invoke('SendMessage', msg).catch(console.error)
-  }
-
-  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage }
+  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene }
 }

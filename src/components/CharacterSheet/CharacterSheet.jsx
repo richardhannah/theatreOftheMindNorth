@@ -20,6 +20,7 @@ const EMPTY_CHAR = {
   // Identity
   name: '',
   playerName: '',
+  tokenId: '',
   class: '',
   level: '',
   xp: '',
@@ -71,6 +72,7 @@ function mapApiData(data) {
   return {
     name: c.name || '',
     playerName: c.playerName || '',
+    tokenId: c.tokenId || '',
     class: c.class || '',
     level: c.level || '',
     xp: c.xp || '',
@@ -111,6 +113,7 @@ function mapToApi(char) {
   return {
     name: char.name,
     playerName: char.playerName,
+    tokenId: char.tokenId,
     class: char.class,
     level: Number(char.level) || 0,
     xp: Number(char.xp) || 0,

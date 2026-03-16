@@ -9,7 +9,6 @@ import Lore from './pages/Lore'
 import WeaponMastery from './pages/WeaponMastery'
 import TextCrawlPage from './pages/TextCrawlPage'
 import Workbench from './pages/Workbench'
-import DiceRoom from './pages/DiceRoom'
 import Login from './pages/Login'
 import Admin from './pages/Admin'
 import Characters from './pages/Characters'
@@ -30,7 +29,6 @@ function App() {
             <Route path="lore" element={<Lore />} />
             <Route path="weapon-mastery" element={<WeaponMastery />} />
             <Route path="textcrawl" element={<TextCrawlPage />} />
-            <Route path="diceroom" element={<DiceRoom />} />
             <Route path="vtt" element={<Workbench />} />
             <Route path="login" element={<Login />} />
             <Route path="admin" element={<Admin />} />

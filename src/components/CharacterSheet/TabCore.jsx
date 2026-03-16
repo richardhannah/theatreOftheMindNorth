@@ -1,7 +1,14 @@
+import { useState } from 'react'
+import TokenPicker from '../TokenPicker/TokenPicker'
+import InitialsToken from '../TokenPicker/InitialsToken'
+import tokens from '../VTT/tokens'
+
 const CLASSES = [
   'Fighter', 'Cleric', 'Magic-User', 'Thief',
   'Elf', 'Dwarf', 'Halfling', 'Mystic',
 ]
+
+const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
 
 const ALIGNMENTS = ['Lawful', 'Neutral', 'Chaotic']
 
@@ -35,6 +42,9 @@ function abilityMod(score) {
 }
 
 function TabCore({ char, set, setChar }) {
+  const [showTokenPicker, setShowTokenPicker] = useState(false)
+  const tokenSrc = char.tokenId ? tokenSrcMap[char.tokenId] : null
+
   const setAbility = (key, value) => {
     setChar((prev) => ({
       ...prev,
@@ -55,6 +65,17 @@ function TabCore({ char, set, setChar }) {
       <div className="cs-section">
         <div className="cs-section-header">Identity</div>
         <div className="cs-row">
+          <div
+            className="cs-token-picker"
+            onClick={() => setShowTokenPicker(true)}
+            title="Click to select a token"
+          >
+            {tokenSrc ? (
+              <img src={tokenSrc} alt="Token" className="cs-token-img" />
+            ) : (
+              <InitialsToken name={char.name || '?'} size={56} />
+            )}
+          </div>
           <div className="cs-field cs-field-wide">
             <label className="cs-label">Character Name</label>
             <input
@@ -72,6 +93,12 @@ function TabCore({ char, set, setChar }) {
             />
           </div>
         </div>
+      {showTokenPicker && (
+        <TokenPicker
+          onSelect={(t) => set('tokenId', t.id)}
+          onClose={() => setShowTokenPicker(false)}
+        />
+      )}
         <div className="cs-row">
           <div className="cs-field">
             <label className="cs-label">Class</label>

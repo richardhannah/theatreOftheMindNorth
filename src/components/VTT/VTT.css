@@ -99,6 +99,114 @@
   opacity: 0.3;
 }
 
+/* Scene panel */
+.vtt-scene-panel {
+  background: var(--worn-leather);
+  border-bottom: 2px solid var(--antique-gold);
+  padding: 8px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.vtt-scene-list {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.vtt-scene-item {
+  display: flex;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.vtt-scene-active {
+  border-color: var(--deep-gold);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vtt-scene-select {
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  color: var(--pale-gold);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.vtt-scene-select:hover {
+  background: var(--antique-gold);
+  color: var(--parchment);
+}
+
+.vtt-scene-delete {
+  padding: 4px 6px;
+  border: none;
+  border-left: 1px solid var(--antique-gold);
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vtt-scene-delete:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+.vtt-scene-create {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vtt-scene-input {
+  padding: 4px 8px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--dungeon-black);
+  color: var(--pale-gold);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  width: 140px;
+}
+
+.vtt-scene-input::placeholder {
+  color: var(--antique-gold);
+  opacity: 0.6;
+}
+
+.vtt-scene-map-select {
+  padding: 4px 6px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+.vtt-scene-create-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--antique-gold);
+  color: var(--parchment);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+
+.vtt-scene-create-btn:hover {
+  background: var(--deep-gold);
+}
+
 .vtt-viewport {
   flex: 1;
   overflow: hidden;
@@ -241,7 +349,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  bottom: 0;
+  height: 80%;
   width: 180px;
   background: rgba(92, 74, 42, 0.6);
   border-right: 2px solid var(--antique-gold);
@@ -347,6 +455,36 @@
   background: var(--worn-leather);
 }
 
+.vtt-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--antique-gold);
+  font-size: 12px;
+  color: var(--pale-gold);
+}
+
+.vtt-chat-header-name {
+  font-weight: 500;
+}
+
+.vtt-chat-reset {
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--pale-gold);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.vtt-chat-reset:hover {
+  background: var(--antique-gold);
+  color: var(--parchment);
+}
+
 .vtt-chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -362,6 +500,23 @@
   font-size: 13px;
   color: var(--pale-gold);
   line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.vtt-chat-msg-token {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.vtt-chat-msg svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .vtt-chat-msg strong {
@@ -372,6 +527,48 @@
   color: var(--deep-gold);
   font-family: var(--mono);
   font-size: 12px;
+}
+
+.vtt-chat-join {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 8px;
+  gap: 6px;
+}
+
+.vtt-chat-char-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vtt-chat-char-token {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.vtt-chat-char-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--pale-gold);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--sans);
+  text-align: left;
+}
+
+.vtt-chat-char-btn:hover {
+  background: var(--antique-gold);
+  color: var(--parchment);
 }
 
 .vtt-chat-form,

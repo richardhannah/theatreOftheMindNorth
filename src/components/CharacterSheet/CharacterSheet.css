@@ -62,6 +62,37 @@
   overflow: hidden;
 }
 
+/* Token picker in identity */
+.cs-token-picker {
+  flex: 0 0 60px;
+  height: 60px;
+  border: 2px dashed var(--antique-gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.cs-token-picker:hover {
+  border-color: var(--deep-gold);
+  border-style: solid;
+}
+
+.cs-token-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs-token-placeholder {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+}
+
 .cs-section-header {
   background: var(--worn-leather);
   color: var(--pale-gold);
