@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import tokens from './tokens'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
@@ -40,7 +41,7 @@ function VTT() {
   const [gridThickness, setGridThickness] = useState(savedGrid.current?.gridThickness ?? 1)
   const [showGridPanel, setShowGridPanel] = useState(false)
   const [showCounterTray, setShowCounterTray] = useState(false)
-  const [showChat, setShowChat] = useState(false)
+  const [showChat, setShowChat] = useState(true)
   const [showScenePanel, setShowScenePanel] = useState(false)
   const [counters, setCounters] = useState([])
   const [trayFilter, setTrayFilter] = useState('')
@@ -99,18 +100,38 @@ function VTT() {
   const [chatInput, setChatInput] = useState('')
   const [charName, setCharName] = useState(() => localStorage.getItem('vtt_char_name') || '')
   const [charTokenId, setCharTokenId] = useState(() => localStorage.getItem('vtt_char_token') || '')
+  const [charId, setCharId] = useState(() => localStorage.getItem('vtt_char_id') || '')
   const [charNameSet, setCharNameSet] = useState(() => !!localStorage.getItem('vtt_char_name'))
   const [chatCharacters, setChatCharacters] = useState([])
   const chatMessagesRef = useRef(null)
 
-  // Load characters for chat name picker
+  // Load characters for chat name picker + refresh current character's token
   useEffect(() => {
     if (!user) return
     fetch(`${API_URL}/api/characters`, {
       headers: { 'Authorization': `Bearer ${user.token}` },
     })
       .then((res) => res.ok ? res.json() : [])
-      .then((data) => setChatCharacters(data || []))
+      .then((data) => {
+        setChatCharacters(data || [])
+        const currentId = localStorage.getItem('vtt_char_id')
+        if (currentId) {
+          const match = (data || []).find((c) => c.characterId === currentId)
+          if (match) {
+            // Refresh name and token if they changed
+            setCharName(match.name)
+            setCharTokenId(match.tokenId || '')
+            localStorage.setItem('vtt_char_name', match.name)
+            localStorage.setItem('vtt_char_token', match.tokenId || '')
+          } else {
+            // Character was deleted — reset selection
+            setCharName(''); setCharTokenId(''); setCharId(''); setCharNameSet(false)
+            localStorage.removeItem('vtt_char_name')
+            localStorage.removeItem('vtt_char_token')
+            localStorage.removeItem('vtt_char_id')
+          }
+        }
+      })
       .catch(() => {})
   }, [user])
 
@@ -195,13 +216,13 @@ function VTT() {
     }))
     setCounters(resolved)
     counterIdRef.current = scene.nextCounterId || 0
-    if (scene.grid?.gridW) {
-      setGridW(scene.grid.gridW)
-      setGridH(scene.grid.gridH)
-      setGridOffset({ x: scene.grid.offsetX, y: scene.grid.offsetY })
-      setGridColor(scene.grid.gridColor)
-      setGridOpacity(scene.grid.gridOpacity)
-      setGridThickness(scene.grid.gridThickness)
+    if (scene.grid) {
+      setGridW(scene.grid.gridW || 20)
+      setGridH(scene.grid.gridH || 20)
+      setGridOffset({ x: scene.grid.offsetX || 0, y: scene.grid.offsetY || 0 })
+      setGridColor(scene.grid.gridColor || '#ffffff')
+      setGridOpacity(scene.grid.gridOpacity ?? 0.15)
+      setGridThickness(scene.grid.gridThickness || 1)
     }
     // Allow sync again after React has processed the state updates
     requestAnimationFrame(() => { loadingSceneRef.current = false })
@@ -556,7 +577,7 @@ function VTT() {
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
     }
-  }, [applyTransform, gridOffset])
+  }, [applyTransform, gridOffset, charNameSet])
 
   // Scroll to zoom
   useEffect(() => {
@@ -586,7 +607,7 @@ function VTT() {
 
     vp.addEventListener('wheel', onWheel, { passive: false })
     return () => vp.removeEventListener('wheel', onWheel)
-  }, [render])
+  }, [render, charNameSet])
 
   // Chat send
   const sendChat = (e) => {
@@ -628,26 +649,128 @@ function VTT() {
 
   const zoomPct = Math.round(zoomRef.current * 100)
 
+  // Character selection gate
+  const [showCreateChar, setShowCreateChar] = useState(false)
+  const [newCharName, setNewCharName] = useState('')
+  const [newCharClass, setNewCharClass] = useState('')
+  const CLASSES = ['Fighter', 'Cleric', 'Magic-User', 'Thief', 'Elf', 'Dwarf', 'Halfling', 'Mystic']
+
+  const createAndJoin = async (e) => {
+    e.preventDefault()
+    if (!newCharName.trim() || !user) return
+    try {
+      const res = await fetch(`${API_URL}/api/characters`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+        body: JSON.stringify({ name: newCharName.trim(), class: newCharClass, level: 1, alignment: '' }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      const c = data.character
+      setChatCharacters((prev) => [...prev, { characterId: c.characterId, name: c.name, class: c.class, level: c.level, tokenId: c.tokenId }])
+      setCharName(c.name); setCharTokenId(c.tokenId || ''); setCharId(c.characterId || ''); setCharNameSet(true)
+      localStorage.setItem('vtt_char_name', c.name)
+      localStorage.setItem('vtt_char_token', c.tokenId || '')
+      localStorage.setItem('vtt_char_id', c.characterId || '')
+    } catch { /* ignore */ }
+  }
+
+  if (!charNameSet) {
+    return (
+      <div className="vtt-char-gate">
+        <h2>Join the Virtual Tabletop</h2>
+        {user && chatCharacters.length > 0 && (
+          <div className="vtt-char-gate-list">
+            {chatCharacters.map((c) => (
+              <button
+                key={c.characterId}
+                className="vtt-char-gate-btn"
+                onClick={() => {
+                  setCharName(c.name); setCharTokenId(c.tokenId || ''); setCharId(c.characterId || ''); setCharNameSet(true)
+                  localStorage.setItem('vtt_char_name', c.name)
+                  localStorage.setItem('vtt_char_token', c.tokenId || '')
+                  localStorage.setItem('vtt_char_id', c.characterId || '')
+                }}
+              >
+                {c.tokenId && tokenSrcMap[c.tokenId] ? (
+                  <img src={tokenSrcMap[c.tokenId]} alt="" className="vtt-char-gate-token" />
+                ) : (
+                  <InitialsToken name={c.name || '?'} size={40} />
+                )}
+                <div className="vtt-char-gate-info">
+                  <span className="vtt-char-gate-name">{c.name}</span>
+                  <span className="vtt-char-gate-detail">{c.class ? `Level ${c.level} ${c.class}` : ''}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {user && !showCreateChar && (
+          <button className="vtt-char-gate-create-toggle" onClick={() => setShowCreateChar(true)}>
+            + New Character
+          </button>
+        )}
+        {user && showCreateChar && (
+          <form className="vtt-char-gate-create" onSubmit={createAndJoin}>
+            <input
+              autoFocus
+              value={newCharName}
+              onChange={(e) => setNewCharName(e.target.value)}
+              placeholder="Character name"
+              className="vtt-char-gate-input"
+            />
+            <select
+              className="vtt-char-gate-select"
+              value={newCharClass}
+              onChange={(e) => setNewCharClass(e.target.value)}
+            >
+              <option value="">Class...</option>
+              {CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button type="submit" className="vtt-char-gate-submit">Create & Join</button>
+            <button type="button" className="vtt-char-gate-cancel" onClick={() => setShowCreateChar(false)}>Cancel</button>
+          </form>
+        )}
+        <form
+          className="vtt-char-gate-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (charName.trim()) {
+              setCharNameSet(true); setCharId('')
+              localStorage.setItem('vtt_char_name', charName.trim())
+              localStorage.setItem('vtt_char_token', '')
+              localStorage.setItem('vtt_char_id', '')
+            }
+          }}
+        >
+          <input
+            value={charName}
+            onChange={(e) => setCharName(e.target.value)}
+            placeholder={user ? 'Or enter a custom name...' : 'Enter your name...'}
+            className="vtt-char-gate-input"
+          />
+          <button type="submit" className="vtt-char-gate-submit">Join</button>
+        </form>
+      </div>
+    )
+  }
+
   return (
     <div className="vtt">
       <div className="vtt-toolbar">
-        <button
-          className={`vtt-grid-lock-btn${showGridPanel ? ' vtt-link-active' : ''}`}
-          onClick={() => setShowGridPanel(!showGridPanel)}
-        >
-          {showGridPanel ? 'Hide Grid Controls' : 'Show Grid Controls'}
-        </button>
+        {isDM && (
+          <button
+            className={`vtt-grid-lock-btn${showGridPanel ? ' vtt-link-active' : ''}`}
+            onClick={() => setShowGridPanel(!showGridPanel)}
+          >
+            {showGridPanel ? 'Hide Grid Controls' : 'Show Grid Controls'}
+          </button>
+        )}
         <button
           className={`vtt-grid-lock-btn${showCounterTray ? ' vtt-link-active' : ''}`}
           onClick={() => setShowCounterTray(!showCounterTray)}
         >
           {showCounterTray ? 'Hide Counter Tray' : 'Show Counter Tray'}
-        </button>
-        <button
-          className={`vtt-grid-lock-btn${showChat ? ' vtt-link-active' : ''}`}
-          onClick={() => setShowChat(!showChat)}
-        >
-          {showChat ? 'Hide Chat' : 'Show Chat'}
         </button>
         {isDM && (
           <button
@@ -657,7 +780,12 @@ function VTT() {
             Scenes
           </button>
         )}
-        <span className="vtt-toolbar-sep" />
+        {charId && (
+          <Link to={`/characters/${charId}`} className="vtt-grid-lock-btn vtt-char-sheet-link">
+            Character Sheet
+          </Link>
+        )}
+        <span className="vtt-toolbar-spacer" />
         <span className="vtt-toolbar-label">
           {activeSceneId ? scenes.find((s) => s.id === activeSceneId)?.name || '' : 'No scene'}
         </span>
@@ -719,9 +847,11 @@ function VTT() {
                 <button className="vtt-scene-select" onClick={() => vtt.switchScene(s.id)}>
                   {s.name}
                 </button>
-                <button className="vtt-scene-delete" onClick={() => {
-                  if (confirm(`Delete scene "${s.name}"?`)) vtt.deleteScene(s.id)
-                }}>x</button>
+                {s.id !== 'default' && (
+                  <button className="vtt-scene-delete" onClick={() => {
+                    if (confirm(`Delete scene "${s.name}"?`)) vtt.deleteScene(s.id)
+                  }}>x</button>
+                )}
               </div>
             ))}
           </div>
@@ -784,7 +914,11 @@ function VTT() {
               onContextMenu={(e) => { e.preventDefault(); removeCounter(c.id) }}
               title={`${c.label} (right-click to remove)`}
             >
-              <img src={c.src} alt={c.label} draggable={false} />
+              {c.src ? (
+                <img src={c.src} alt={c.label} draggable={false} />
+              ) : (
+                <InitialsToken name={c.label || '?'} size={Math.min(gridW, gridH)} />
+              )}
             </div>
           ))}
         </div>
@@ -799,8 +933,26 @@ function VTT() {
               onChange={(e) => setTrayFilter(e.target.value)}
             />
             <div className="vtt-tray-list">
+              {charName && !trayFilter && (
+                <div
+                  className="vtt-tray-item vtt-tray-item-mine"
+                  onMouseDown={(e) => spawnFromTray(e, {
+                    id: charTokenId || `initials_${charName}`,
+                    src: tokenSrcMap[charTokenId] || '',
+                    label: charName,
+                  })}
+                >
+                  {charTokenId && tokenSrcMap[charTokenId] ? (
+                    <img src={tokenSrcMap[charTokenId]} alt={charName} draggable={false} />
+                  ) : (
+                    <InitialsToken name={charName} size={32} />
+                  )}
+                  <span className="vtt-tray-item-label">{charName}</span>
+                </div>
+              )}
               {tokens
                 .filter((t) => t.label.toLowerCase().includes(trayFilter.toLowerCase()))
+                .filter((t) => t.id !== charTokenId)
                 .map((t) => (
                   <div key={t.id} className="vtt-tray-item" onMouseDown={(e) => spawnFromTray(e, t)}>
                     <img src={t.src} alt={t.label} draggable={false} />
@@ -811,52 +963,21 @@ function VTT() {
           </div>
         )}
         {/* Chat Panel */}
+        {!showChat && (
+          <button className="vtt-chat-show-btn" onClick={() => setShowChat(true)}>Chat</button>
+        )}
         {showChat && (
           <div className="vtt-chat">
-            {!charNameSet ? (
-              <div className="vtt-chat-join">
-                {user && chatCharacters.length > 0 && (
-                  <div className="vtt-chat-char-list">
-                    {chatCharacters.map((c) => (
-                      <button
-                        key={c.characterId}
-                        className="vtt-chat-char-btn"
-                        onClick={() => {
-                          setCharName(c.name); setCharTokenId(c.tokenId || ''); setCharNameSet(true)
-                          localStorage.setItem('vtt_char_name', c.name)
-                          localStorage.setItem('vtt_char_token', c.tokenId || '')
-                        }}
-                      >
-                        {c.tokenId && tokenSrcMap[c.tokenId] ? (
-                          <img src={tokenSrcMap[c.tokenId]} alt="" className="vtt-chat-char-token" />
-                        ) : (
-                          <InitialsToken name={c.name || '?'} size={24} />
-                        )}
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <form className="vtt-chat-name-form" onSubmit={(e) => { e.preventDefault(); if (charName.trim()) { setCharNameSet(true); localStorage.setItem('vtt_char_name', charName.trim()) } }}>
-                  <input
-                    autoFocus
-                    value={charName}
-                    onChange={(e) => setCharName(e.target.value)}
-                    placeholder={user ? 'Or enter a name...' : 'Character name...'}
-                    className="vtt-chat-input"
-                  />
-                  <button type="submit" className="vtt-chat-send">Join</button>
-                </form>
-              </div>
-            ) : (
-              <>
+            <>
                 <div className="vtt-chat-header">
                   <span className="vtt-chat-header-name">{charName}</span>
                   <button className="vtt-chat-reset" onClick={() => {
-                    setCharName(''); setCharTokenId(''); setCharNameSet(false)
+                    setCharName(''); setCharTokenId(''); setCharId(''); setCharNameSet(false)
                     localStorage.removeItem('vtt_char_name')
                     localStorage.removeItem('vtt_char_token')
+                    localStorage.removeItem('vtt_char_id')
                   }}>Switch</button>
+                  <button className="vtt-chat-hide" onClick={() => setShowChat(false)}>&#x2715;</button>
                 </div>
                 <div className="vtt-chat-messages" ref={chatMessagesRef}>
                   {messages.map((m, i) => (
@@ -883,7 +1004,6 @@ function VTT() {
                   <button type="submit" className="vtt-chat-send">Send</button>
                 </form>
               </>
-            )}
           </div>
         )}
         {/* Nav overlay */}

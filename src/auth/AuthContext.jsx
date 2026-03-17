@@ -19,7 +19,10 @@ export function AuthProvider({ children }) {
   }, [user])
 
   const login = (userData) => setUser(userData)
-  const logout = () => setUser(null)
+  const logout = () => {
+    setUser(null)
+    localStorage.clear()
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
