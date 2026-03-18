@@ -8,5 +8,5 @@ export const FEATURES = {
 // Digital Samba configuration (only used when VIDEO_CONFERENCING is enabled)
 export const VIDEO_CONFIG = {
   team: import.meta.env.VITE_SAMBA_TEAM || 'theatreofthemind',
-  room: import.meta.env.VITE_SAMBA_ROOM || 'demo-room',
+  room: import.meta.env.VITE_SAMBA_ROOM || 'vtt',
 }

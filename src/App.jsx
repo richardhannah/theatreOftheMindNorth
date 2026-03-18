@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
+import { VttModalProvider } from './components/VTT/VttModalContext'
 import Layout from './pages/Layout'
 import DevHome from './pages/DevHome'
 import Recap from './pages/Recap'
@@ -19,6 +20,7 @@ const isDev = import.meta.env.DEV
 function App() {
   return (
     <AuthProvider>
+      <VttModalProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -38,6 +40,7 @@ function App() {
           {isDev && <Route path="/workbench" element={<Workbench />} />}
         </Routes>
       </BrowserRouter>
+      </VttModalProvider>
     </AuthProvider>
   )
 }

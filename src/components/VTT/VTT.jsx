@@ -1,11 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
 import tokens from './tokens'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
 import { useAuth } from '../../auth/AuthContext'
 import { API_URL, FEATURES } from '../../config'
 import InitialsToken from '../TokenPicker/InitialsToken'
+import StatusEffectsModal from './StatusEffectsModal'
+import { EFFECT_MAP } from './statusEffects'
+import CharacterSheet from '../CharacterSheet/CharacterSheet'
+import WeaponMastery from '../../pages/WeaponMastery'
+import HouseRules from '../../pages/HouseRules'
+import Lore from '../../pages/Lore'
+import Recap from '../../pages/Recap'
+import { useVttModal } from './VttModalContext'
 import { lazy, Suspense } from 'react'
 import './VTT.css'
 
@@ -48,11 +55,16 @@ function VTT() {
   const [showGridPanel, setShowGridPanel] = useState(false)
   const [showCounterTray, setShowCounterTray] = useState(false)
   const [showChat, setShowChat] = useState(true)
+  const [chatSize, setChatSize] = useState({ w: 280, h: 50 }) // h is percentage
+  const chatResizing = useRef(false)
+  const chatResizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
   const [showScenePanel, setShowScenePanel] = useState(false)
+  const [contextMenu, setContextMenu] = useState(null) // { x, y, counterId }
+  const [statusModal, setStatusModal] = useState(null) // counterId
+  const vttModal = useVttModal()
   const [videoSidebarOpen, setVideoSidebarOpen] = useState(true)
   const [counters, setCounters] = useState([])
   const [trayFilter, setTrayFilter] = useState('')
-  const counterIdRef = useRef(0)
 
   // Scene state
   const [scenes, setScenes] = useState([])
@@ -88,7 +100,6 @@ function VTT() {
           gridOpacity: isActive ? gridOpacity : 0.15,
           gridThickness: isActive ? gridThickness : 1,
           counters: isActive ? JSON.stringify(counters.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
-          nextCounterId: isActive ? counterIdRef.current : 0,
           isActive,
         }
       })
@@ -161,12 +172,13 @@ function VTT() {
           id: counter.id,
           tokenId: counter.tokenId,
           src: tokenSrcMap[counter.tokenId] || '',
+          baseLabel: counter.label.replace(/\s\d+$/, ''),
           label: counter.label,
           x: counter.x,
           y: counter.y,
+          effects: counter.effects || [],
         }]
       })
-      counterIdRef.current = Math.max(counterIdRef.current, counter.id)
     },
     onCounterMoved: (id, x, y) => {
       setCounters((prev) => prev.map((c) =>
@@ -217,12 +229,13 @@ function VTT() {
       id: c.id,
       tokenId: c.tokenId,
       src: tokenSrcMap[c.tokenId] || '',
+      baseLabel: c.label.replace(/\s\d+$/, ''),
       label: c.label,
       x: c.x,
       y: c.y,
+      effects: c.effects || [],
     }))
     setCounters(resolved)
-    counterIdRef.current = scene.nextCounterId || 0
     if (scene.grid) {
       setGridW(scene.grid.gridW || 20)
       setGridH(scene.grid.gridH || 20)
@@ -393,6 +406,23 @@ function VTT() {
     }
   }
 
+  // Assign numbered label for duplicate tokens
+  const assignLabel = (baseLabel, currentCounters, excludeId) => {
+    const sameBase = currentCounters.filter((c) => c.baseLabel === baseLabel && c.id !== excludeId)
+    if (sameBase.length === 0) return { label: baseLabel, renumber: null }
+    // Find the highest existing number
+    let maxNum = 0
+    for (const c of sameBase) {
+      const match = c.label.match(/\s(\d+)$/)
+      maxNum = Math.max(maxNum, match ? parseInt(match[1], 10) : 1)
+    }
+    const newNum = maxNum + 1
+    // If there's exactly one existing with no number, it needs to become #1
+    const needsRenumber = sameBase.length === 1 && !sameBase[0].label.match(/\s\d+$/)
+      ? sameBase[0].id : null
+    return { label: `${baseLabel} ${newNum}`, renumber: needsRenumber }
+  }
+
   // Spawn a counter from the tray
   const spawnFromTray = (e, token) => {
     e.preventDefault()
@@ -407,16 +437,17 @@ function VTT() {
     const mapX = (e.clientX - rect.left - pan.x) / zoom
     const mapY = (e.clientY - rect.top - pan.y) / zoom
 
-    counterIdRef.current++
-    const newId = counterIdRef.current
+    const newId = crypto.randomUUID()
 
     const newCounter = {
       id: newId,
       tokenId: token.id,
       src: token.src,
+      baseLabel: token.label,
       label: token.label,
       x: mapX,
       y: mapY,
+      effects: [],
     }
 
     setCounters((prev) => [...prev, newCounter])
@@ -445,11 +476,21 @@ function VTT() {
         const newX = counterDragRef.current.startPos.x + dx
         const newY = counterDragRef.current.startPos.y + dy
         const snapped = snapToGrid(newX, newY)
-        setCounters((prev) => prev.map((c) =>
-          c.id === newId ? { ...c, x: snapped.x, y: snapped.y } : c
-        ))
-        // Broadcast the new counter at its final position
-        vtt.addCounter({ id: newId, tokenId: token.id, label: token.label, x: snapped.x, y: snapped.y })
+        setCounters((prev) => {
+          const { label, renumber } = assignLabel(token.label, prev, newId)
+          let updated = prev.map((c) =>
+            c.id === newId ? { ...c, x: snapped.x, y: snapped.y, label } : c
+          )
+          if (renumber) {
+            const renamedLabel = `${updated.find((c) => c.id === renumber).baseLabel} 1`
+            updated = updated.map((c) =>
+              c.id === renumber ? { ...c, label: renamedLabel } : c
+            )
+          }
+          // Broadcast from inside the updater where we have the correct label
+          vtt.addCounter({ id: newId, tokenId: token.id, label, x: snapped.x, y: snapped.y })
+          return updated
+        })
         markScenesDirty()
       }
       counterDragRef.current = null
@@ -616,6 +657,36 @@ function VTT() {
     return () => vp.removeEventListener('wheel', onWheel)
   }, [render, charNameSet])
 
+  // Chat resize
+  const startChatResize = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const vp = viewportRef.current
+    if (!vp) return
+    chatResizing.current = true
+    chatResizeStart.current = { x: e.clientX, y: e.clientY, w: chatSize.w, h: chatSize.h }
+
+    const vpHeight = vp.clientHeight
+
+    const onMouseMove = (ev) => {
+      if (!chatResizing.current) return
+      const dx = chatResizeStart.current.x - ev.clientX
+      const dy = ev.clientY - chatResizeStart.current.y
+      const newW = Math.max(200, Math.min(600, chatResizeStart.current.w + dx))
+      const newH = Math.max(20, Math.min(90, chatResizeStart.current.h + (dy / vpHeight) * 100))
+      setChatSize({ w: newW, h: newH })
+    }
+
+    const onMouseUp = () => {
+      chatResizing.current = false
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
   // Chat send
   const sendChat = (e) => {
     e.preventDefault()
@@ -768,7 +839,7 @@ function VTT() {
         <div className={`vtt-video-sidebar${videoSidebarOpen ? '' : ' vtt-video-sidebar-collapsed'}`}>
           {videoSidebarOpen && (
             <Suspense fallback={null}>
-              <VideoConference userName={charName} />
+              <VideoConference userName={charName} isDM={isDM} />
             </Suspense>
           )}
           <button
@@ -804,9 +875,9 @@ function VTT() {
           </button>
         )}
         {charId && (
-          <Link to={`/characters/${charId}`} className="vtt-grid-lock-btn vtt-char-sheet-link">
+          <button className="vtt-grid-lock-btn" onClick={() => vttModal.openCharSheet(charId)}>
             Character Sheet
-          </Link>
+          </button>
         )}
         <span className="vtt-toolbar-spacer" />
         <span className="vtt-toolbar-label">
@@ -934,14 +1005,29 @@ function VTT() {
                 height: `${gridH}px`,
               }}
               onMouseDown={(e) => startCounterDrag(e, c.id)}
-              onContextMenu={(e) => { e.preventDefault(); removeCounter(c.id) }}
-              title={`${c.label} (right-click to remove)`}
+              onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, counterId: c.id }) }}
+              title={c.label}
             >
               {c.src ? (
                 <img src={c.src} alt={c.label} draggable={false} />
               ) : (
                 <InitialsToken name={c.label || '?'} size={Math.min(gridW, gridH)} />
               )}
+              {c.effects?.length > 0 && (
+                <span className="vtt-counter-effects">
+                  {c.effects.map((eid) => EFFECT_MAP[eid]?.icon || '').join('')}
+                </span>
+              )}
+              {c.effects?.length > 0 && (
+                <div className="vtt-counter-tooltip">
+                  {c.effects.map((eid) => (
+                    <div key={eid} className="vtt-counter-tooltip-row">
+                      <span>{EFFECT_MAP[eid]?.icon}</span> {EFFECT_MAP[eid]?.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <span className="vtt-counter-label">{c.label}</span>
             </div>
           ))}
         </div>
@@ -990,16 +1076,14 @@ function VTT() {
           <button className="vtt-chat-show-btn" onClick={() => setShowChat(true)}>Chat</button>
         )}
         {showChat && (
-          <div className="vtt-chat">
+          <div className="vtt-chat" style={{ width: `${chatSize.w}px`, height: `${chatSize.h}%` }}>
+            <div className="vtt-chat-resize" onMouseDown={startChatResize} />
             <>
                 <div className="vtt-chat-header">
                   <span className="vtt-chat-header-name">{charName}</span>
-                  <button className="vtt-chat-reset" onClick={() => {
-                    setCharName(''); setCharTokenId(''); setCharId(''); setCharNameSet(false)
-                    localStorage.removeItem('vtt_char_name')
-                    localStorage.removeItem('vtt_char_token')
-                    localStorage.removeItem('vtt_char_id')
-                  }}>Switch</button>
+                  {chatCharacters.length > 1 && (
+                    <button className="vtt-chat-reset" onClick={() => vttModal.openCharacters()}>Switch</button>
+                  )}
                   <button className="vtt-chat-hide" onClick={() => setShowChat(false)}>&#x2715;</button>
                 </div>
                 <div className="vtt-chat-messages" ref={chatMessagesRef}>
@@ -1010,7 +1094,7 @@ function VTT() {
                       ) : (
                         <InitialsToken name={m.name || '?'} size={20} />
                       )}
-                      <strong>{m.name}{m.playerName ? ` [${m.playerName}]` : ''}: </strong>
+                      <strong>{m.name}{!m.isDiceRoll && m.playerName ? ` [${m.playerName}]` : ''}{m.isDiceRoll ? ' rolls' : ':'} </strong>
                       {m.text}
                     </div>
                   ))}
@@ -1029,6 +1113,23 @@ function VTT() {
               </>
           </div>
         )}
+        {/* Context menu */}
+        {contextMenu && (
+          <div className="vtt-ctx-backdrop" onClick={() => setContextMenu(null)} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }}>
+            <div
+              className="vtt-ctx-menu"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="vtt-ctx-item" onClick={() => { setStatusModal(contextMenu.counterId); setContextMenu(null) }}>
+                Status Effects
+              </button>
+              <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeCounter(contextMenu.counterId); setContextMenu(null) }}>
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
         {/* Nav overlay */}
         <div className="vtt-nav-overlay">
           <div className="vtt-dpad">
@@ -1045,6 +1146,133 @@ function VTT() {
         </div>
       </div>
     </div>
+    {vttModal.modal?.type === 'charsheet' && (
+      <VttCharSheetModal characterId={vttModal.modal.characterId} onClose={vttModal.closeModal} />
+    )}
+    {vttModal.modal === 'characters' && (
+      <VttCharactersModal
+        characters={chatCharacters}
+        onSelect={(c) => {
+          setCharName(c.name); setCharTokenId(c.tokenId || ''); setCharId(c.characterId || ''); setCharNameSet(true)
+          localStorage.setItem('vtt_char_name', c.name)
+          localStorage.setItem('vtt_char_token', c.tokenId || '')
+          localStorage.setItem('vtt_char_id', c.characterId || '')
+          vttModal.closeModal()
+        }}
+        onViewSheet={(characterId) => vttModal.openCharSheet(characterId)}
+        onClose={vttModal.closeModal}
+      />
+    )}
+    {vttModal.modal?.type === 'page' && (
+      <div className="vtt-modal-overlay" onClick={vttModal.closeModal}>
+        <div className="vtt-modal vtt-modal-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="vtt-modal-header">
+            <span>{{ 'weapon-mastery': 'Weapon Mastery', 'house-rules': 'House Rules', 'lore': 'Lore', 'recap': 'Recap' }[vttModal.modal.page] || vttModal.modal.page}</span>
+            <button className="vtt-modal-close" onClick={vttModal.closeModal}>&#x2715;</button>
+          </div>
+          <div className="vtt-modal-body">
+            {vttModal.modal.page === 'weapon-mastery' && <WeaponMastery />}
+            {vttModal.modal.page === 'house-rules' && <HouseRules />}
+            {vttModal.modal.page === 'lore' && <Lore />}
+            {vttModal.modal.page === 'recap' && <Recap />}
+          </div>
+        </div>
+      </div>
+    )}
+    {statusModal != null && (() => {
+      const counter = counters.find((c) => c.id === statusModal)
+      if (!counter) return null
+      return (
+        <StatusEffectsModal
+          counterLabel={counter.label}
+          activeEffects={counter.effects}
+          onToggle={(effectId) => {
+            setCounters((prev) => prev.map((c) => {
+              if (c.id !== statusModal) return c
+              const effects = c.effects.includes(effectId)
+                ? c.effects.filter((e) => e !== effectId)
+                : [...c.effects, effectId]
+              return { ...c, effects }
+            }))
+            markScenesDirty()
+          }}
+          onClose={() => setStatusModal(null)}
+        />
+      )
+    })()}
+    </div>
+  )
+}
+
+function VttCharSheetModal({ characterId, onClose }) {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/characters/${characterId}`, {
+      headers: { 'Authorization': `Bearer ${user.token}` },
+    })
+      .then((res) => { if (!res.ok) throw new Error('Failed to load'); return res.json() })
+      .then((d) => { setData(d); setError('') })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [characterId, user])
+
+  return (
+    <div className="vtt-modal-overlay" onClick={onClose}>
+      <div className="vtt-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="vtt-modal-header">
+          <span>Character Sheet</span>
+          <button className="vtt-modal-close" onClick={onClose}>&#x2715;</button>
+        </div>
+        <div className="vtt-modal-body">
+          {loading && <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>}
+          {error && <div style={{ padding: 20, textAlign: 'center', color: 'var(--blood-crimson)' }}>{error}</div>}
+          {data && (
+            <CharacterSheet
+              characterId={characterId}
+              initialData={data}
+              token={user.token}
+              apiUrl={API_URL}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VttCharactersModal({ characters, onSelect, onViewSheet, onClose }) {
+  return (
+    <div className="vtt-modal-overlay" onClick={onClose}>
+      <div className="vtt-modal vtt-modal-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="vtt-modal-header">
+          <span>Characters</span>
+          <button className="vtt-modal-close" onClick={onClose}>&#x2715;</button>
+        </div>
+        <div className="vtt-modal-body">
+          <div className="vtt-chars-list">
+            {characters.map((c) => (
+              <div key={c.characterId} className="vtt-chars-item">
+                <button className="vtt-chars-select" onClick={() => onSelect(c)}>
+                  {c.tokenId && tokenSrcMap[c.tokenId] ? (
+                    <img src={tokenSrcMap[c.tokenId]} alt="" className="vtt-chars-token" />
+                  ) : (
+                    <InitialsToken name={c.name || '?'} size={32} />
+                  )}
+                  <div className="vtt-chars-info">
+                    <span className="vtt-chars-name">{c.name}</span>
+                    <span className="vtt-chars-detail">{c.class ? `Level ${c.level} ${c.class}` : ''}</span>
+                  </div>
+                </button>
+                <button className="vtt-chars-sheet-btn" onClick={() => onViewSheet(c.characterId)}>Sheet</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
