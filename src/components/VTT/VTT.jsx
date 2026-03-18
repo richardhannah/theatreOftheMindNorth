@@ -4,9 +4,15 @@ import tokens from './tokens'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
 import { useAuth } from '../../auth/AuthContext'
-import { API_URL } from '../../config'
+import { API_URL, FEATURES } from '../../config'
 import InitialsToken from '../TokenPicker/InitialsToken'
+import { lazy, Suspense } from 'react'
 import './VTT.css'
+
+// Video conferencing — lazy loaded, only when feature is enabled
+const VideoConference = FEATURES.VIDEO_CONFERENCING
+  ? lazy(() => import('../VideoConference/VideoConference'))
+  : null
 
 const MIN_ZOOM = 0.25
 const MAX_ZOOM = 4
@@ -43,6 +49,7 @@ function VTT() {
   const [showCounterTray, setShowCounterTray] = useState(false)
   const [showChat, setShowChat] = useState(true)
   const [showScenePanel, setShowScenePanel] = useState(false)
+  const [videoSidebarOpen, setVideoSidebarOpen] = useState(true)
   const [counters, setCounters] = useState([])
   const [trayFilter, setTrayFilter] = useState('')
   const counterIdRef = useRef(0)
@@ -756,7 +763,23 @@ function VTT() {
   }
 
   return (
-    <div className="vtt">
+    <div className="vtt-outer">
+      {VideoConference && (
+        <div className={`vtt-video-sidebar${videoSidebarOpen ? '' : ' vtt-video-sidebar-collapsed'}`}>
+          {videoSidebarOpen && (
+            <Suspense fallback={null}>
+              <VideoConference userName={charName} />
+            </Suspense>
+          )}
+          <button
+            className="vtt-video-sidebar-toggle"
+            onClick={() => setVideoSidebarOpen(!videoSidebarOpen)}
+          >
+            {videoSidebarOpen ? '\u25C0' : '\u25B6'}
+          </button>
+        </div>
+      )}
+      <div className="vtt">
       <div className="vtt-toolbar">
         {isDM && (
           <button
@@ -1021,6 +1044,7 @@ function VTT() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

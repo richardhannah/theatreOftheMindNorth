@@ -4,4 +4,9 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    headers: {
+      'Permissions-Policy': 'camera=(self "https://theatreofthemind.digitalsamba.com"), microphone=(self "https://theatreofthemind.digitalsamba.com"), display-capture=(self "https://theatreofthemind.digitalsamba.com")',
+    },
+  },
 })
