@@ -51,6 +51,11 @@ function Header() {
         ) : (
           <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
         )}
+        {user && (compact ? (
+          <button className="menu-link" onClick={() => vttModal.openPage('expedition')}>Expedition</button>
+        ) : (
+          <Link to="/expedition" className="menu-link">Expedition</Link>
+        ))}
         {user && <Link to="/vtt" className="menu-link">VTT</Link>}
         {user && (compact ? (
           <button className="menu-link" onClick={() => vttModal.openCharacters()}>Characters</button>

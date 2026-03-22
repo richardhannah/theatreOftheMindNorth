@@ -847,6 +847,14 @@
   font-size: 13px;
 }
 
+.cs-equip-notes {
+  flex: 1;
+  min-width: 60px;
+  padding: 3px 6px;
+  font-size: 12px;
+  color: var(--antique-gold);
+}
+
 .cs-equip-item-actions {
   display: flex;
   gap: 3px;

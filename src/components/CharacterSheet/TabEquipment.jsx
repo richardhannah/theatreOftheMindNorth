@@ -343,6 +343,13 @@ function TabEquipment({ char, setChar }) {
                     title="Weight (cn)"
                     placeholder="cn"
                   />
+                  <input
+                    className="cs-input cs-equip-notes"
+                    value={item.notes || ''}
+                    onChange={(e) => updateItem(i, 'notes', e.target.value)}
+                    title="Notes"
+                    placeholder="Notes"
+                  />
                 </div>
                 <div className="cs-equip-item-actions">
                   {viewIndex !== targetIndex && (

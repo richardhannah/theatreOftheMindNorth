@@ -12,6 +12,7 @@ import WeaponMastery from '../../pages/WeaponMastery'
 import HouseRules from '../../pages/HouseRules'
 import Lore from '../../pages/Lore'
 import Recap from '../../pages/Recap'
+import Expedition from '../../pages/Expedition'
 import { useVttModal } from './VttModalContext'
 import { lazy, Suspense } from 'react'
 import './VTT.css'
@@ -1167,7 +1168,7 @@ function VTT() {
       <div className="vtt-modal-overlay" onClick={vttModal.closeModal}>
         <div className="vtt-modal vtt-modal-lg" onClick={(e) => e.stopPropagation()}>
           <div className="vtt-modal-header">
-            <span>{{ 'weapon-mastery': 'Weapon Mastery', 'house-rules': 'House Rules', 'lore': 'Lore', 'recap': 'Recap' }[vttModal.modal.page] || vttModal.modal.page}</span>
+            <span>{{ 'weapon-mastery': 'Weapon Mastery', 'house-rules': 'House Rules', 'lore': 'Lore', 'recap': 'Recap', 'expedition': 'Expedition' }[vttModal.modal.page] || vttModal.modal.page}</span>
             <button className="vtt-modal-close" onClick={vttModal.closeModal}>&#x2715;</button>
           </div>
           <div className="vtt-modal-body">
@@ -1175,6 +1176,7 @@ function VTT() {
             {vttModal.modal.page === 'house-rules' && <HouseRules />}
             {vttModal.modal.page === 'lore' && <Lore />}
             {vttModal.modal.page === 'recap' && <Recap />}
+            {vttModal.modal.page === 'expedition' && <Expedition />}
           </div>
         </div>
       </div>
@@ -1235,7 +1237,6 @@ function VttCharSheetModal({ characterId, onClose }) {
               characterId={characterId}
               initialData={data}
               token={user.token}
-              apiUrl={API_URL}
             />
           )}
         </div>

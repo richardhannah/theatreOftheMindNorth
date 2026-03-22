@@ -1,0 +1,591 @@
+.expedition-page {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Tabs */
+.exp-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--antique-gold);
+}
+
+.exp-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--antique-gold);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: var(--dark-parchment);
+  color: var(--worn-leather);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  position: relative;
+  top: 2px;
+}
+
+.exp-tab:hover {
+  background: var(--pale-gold);
+}
+
+.exp-tab-active {
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+}
+
+.exp-tab-active:hover {
+  background: var(--worn-leather);
+}
+
+.expedition-page h2 {
+  text-align: center;
+  color: var(--deep-gold);
+  margin-bottom: 16px;
+}
+
+.exp-section {
+  margin-bottom: 16px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.exp-section-header {
+  background: var(--worn-leather);
+  color: var(--pale-gold);
+  padding: 6px 14px;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.exp-foreman {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+}
+
+.exp-foreman-token {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border: 2px dashed var(--antique-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.exp-foreman-token:hover {
+  border-color: var(--deep-gold);
+  border-style: solid;
+}
+
+.exp-foreman-token-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exp-foreman-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exp-label {
+  font-size: 12px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.exp-input {
+  padding: 8px 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-family: var(--sans);
+}
+
+.exp-input:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+/* Treasure display */
+.exp-treasure {
+  display: flex;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.exp-coin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.exp-coin-label {
+  font-size: 11px;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.exp-coin-enc {
+  margin-left: auto;
+}
+
+.exp-overloaded {
+  color: var(--blood-crimson);
+  font-weight: 700;
+}
+
+.exp-coin-value {
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--dungeon-black);
+}
+
+/* Equipment table */
+.exp-equipment {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exp-equipment th,
+.exp-equipment td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--dark-parchment);
+  text-align: left;
+  font-size: 14px;
+}
+
+.exp-equipment th {
+  background: var(--dark-parchment);
+  color: var(--antique-gold);
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.exp-eq-num {
+  text-align: center;
+  font-family: var(--mono);
+}
+
+.exp-eq-notes {
+  color: var(--antique-gold);
+  font-size: 13px;
+}
+
+/* Section header button */
+.exp-header-btn {
+  padding: 2px 10px;
+  border: 1px solid var(--pale-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--pale-gold);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  float: right;
+}
+
+.exp-header-btn:hover {
+  background: var(--antique-gold);
+}
+
+/* Livestock */
+.exp-livestock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.exp-livestock-row:last-child {
+  border-bottom: none;
+}
+
+.exp-livestock-name {
+  flex: 0 0 140px;
+}
+
+.exp-livestock-type {
+  flex: 0 0 140px;
+}
+
+.exp-livestock-saddlebags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--antique-gold);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.exp-livestock-notes {
+  flex: 1;
+  font-size: 13px;
+  color: var(--antique-gold);
+}
+
+/* Pack animals table */
+.exp-animals-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exp-animals-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--dark-parchment);
+  vertical-align: middle;
+}
+
+.exp-animals-table tr:last-child td {
+  border-bottom: none;
+}
+
+.exp-animal-type {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.exp-animal-stats {
+  font-size: 11px;
+  color: var(--antique-gold);
+  font-family: var(--mono);
+}
+
+.exp-animal-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.exp-animal-count {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--mono);
+  min-width: 20px;
+  text-align: center;
+}
+
+.exp-animal-assigned-cell {
+  width: 80px;
+  text-align: right;
+}
+
+.exp-animal-assigned {
+  font-size: 10px;
+  color: var(--shadowed-green);
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 2px 6px;
+  border: 1px solid var(--shadowed-green);
+  border-radius: 3px;
+}
+
+.exp-animal-assigned-spacer {
+  visibility: hidden;
+}
+
+.exp-remove-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--blood-crimson);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.exp-remove-btn:hover {
+  background: var(--blood-crimson);
+  color: #fff;
+}
+
+/* Wagon card */
+.exp-wagon-card {
+  border-bottom: 1px solid var(--dark-parchment);
+}
+
+.exp-wagon-card:last-child {
+  border-bottom: none;
+}
+
+.exp-wagon-team {
+  padding: 4px 14px 8px;
+}
+
+.exp-wagon-team-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.exp-wagon-team-label {
+  font-size: 11px;
+  color: var(--antique-gold);
+  white-space: nowrap;
+}
+
+.exp-wagon-draft {
+  font-size: 11px;
+  color: var(--shadowed-green);
+  font-family: var(--mono);
+}
+
+.exp-wagon-overteamed {
+  color: var(--deep-gold);
+}
+
+.exp-wagon-team-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exp-wagon-team-list {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.exp-wagon-animal {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: var(--dark-parchment);
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  color: var(--dungeon-black);
+}
+
+.exp-wagon-no-team {
+  font-size: 12px;
+  color: var(--antique-gold);
+  font-style: italic;
+}
+
+.exp-wagon-team-btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.exp-team-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--worn-leather);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.exp-team-btn:hover:not(:disabled) {
+  background: var(--antique-gold);
+  color: var(--parchment);
+}
+
+.exp-team-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Mercenaries */
+.exp-merc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.exp-merc-table th,
+.exp-merc-table td {
+  padding: 2px 6px;
+  border-bottom: 1px solid var(--dark-parchment);
+  vertical-align: middle;
+}
+
+.exp-merc-table th {
+  background: var(--dark-parchment);
+  color: var(--antique-gold);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
+}
+
+.exp-merc-table th:first-child,
+.exp-merc-table th:nth-child(2) {
+  text-align: left;
+}
+
+.exp-merc-type {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.exp-merc-equip {
+  font-size: 11px;
+  color: var(--antique-gold);
+}
+
+.exp-merc-cell {
+  text-align: center;
+}
+
+.exp-merc-na {
+  color: var(--antique-gold);
+  font-size: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    var(--dark-parchment) 4px,
+    var(--dark-parchment) 5px
+  );
+  opacity: 0.5;
+}
+
+.exp-merc-hire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.exp-merc-count {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--mono);
+  min-width: 16px;
+  text-align: center;
+}
+
+.exp-merc-cost {
+  font-size: 9px;
+  color: var(--antique-gold);
+  display: block;
+}
+
+.exp-merc-race {
+  min-width: 70px;
+}
+
+.exp-merc-race-toggle {
+  display: block;
+  margin: 0 auto 2px;
+  cursor: pointer;
+}
+
+.exp-merc-disabled-header {
+  opacity: 0.4;
+}
+
+.exp-merc-total-label {
+  text-align: right;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--antique-gold);
+}
+
+.exp-merc-total {
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--deep-gold);
+}
+
+.exp-merc-grand-total {
+  font-weight: 700;
+  font-size: 15px;
+  font-family: var(--mono);
+  color: var(--deep-gold);
+  text-align: center;
+}
+
+.exp-merc-table tfoot td {
+  border-top: 2px solid var(--antique-gold);
+  border-bottom: none;
+  padding-top: 4px;
+}
+
+/* Specialists */
+.exp-specialist-cost {
+  font-size: 12px;
+  color: var(--antique-gold);
+  font-family: var(--mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.exp-specialist-total {
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--deep-gold);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Notes */
+.exp-notes-wrap {
+  padding: 8px 14px;
+}
+
+.exp-notes {
+  width: 100%;
+  min-height: 300px;
+  padding: 10px;
+  border: 1px solid var(--antique-gold);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--dungeon-black);
+  font-size: 15px;
+  font-family: var(--sans);
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.exp-notes:focus {
+  outline: 2px solid var(--deep-gold);
+  outline-offset: -1px;
+}
+
+/* Empty state */
+.exp-empty {
+  padding: 14px;
+  text-align: center;
+  color: var(--antique-gold);
+  font-size: 14px;
+  font-style: italic;
+}

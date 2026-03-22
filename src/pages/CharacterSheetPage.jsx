@@ -47,7 +47,6 @@ function CharacterSheetPage() {
       characterId={characterId}
       initialData={characterData}
       token={user.token}
-      apiUrl={API_URL}
     />
   )
 }

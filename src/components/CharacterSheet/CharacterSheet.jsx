@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState } from 'react'
+import { usePersistence } from '../../hooks/usePersistence'
+import { API_URL } from '../../config'
 import TabCore from './TabCore'
 import TabAbilities from './TabAbilities'
 import TabSpells from './TabSpells'
@@ -13,8 +15,6 @@ const TABS = [
   { key: 'equipment', label: 'Equipment' },
   { key: 'notes', label: 'Notes' },
 ]
-
-const SYNC_INTERVAL = 10_000
 
 const EMPTY_CHAR = {
   // Identity
@@ -145,108 +145,19 @@ function mapToApi(char) {
   }
 }
 
-function storageKey(characterId) {
-  return `character_${characterId}`
-}
+async function saveCharacterToApi(data, headers, characterId) {
+  const charRes = await fetch(`${API_URL}/api/characters/${characterId}`, {
+    method: 'PUT', headers,
+    body: JSON.stringify(mapToApi(data)),
+  })
+  if (!charRes.ok) throw new Error('Save failed')
 
-function dirtyKey(characterId) {
-  return `character_${characterId}_dirty`
-}
-
-function loadFromLocal(characterId, initialData) {
-  try {
-    const stored = localStorage.getItem(storageKey(characterId))
-    if (stored) return JSON.parse(stored)
-  } catch { /* ignore corrupt data */ }
-  return mapApiData(initialData)
-}
-
-function CharacterSheet({ characterId, initialData, token, apiUrl }) {
-  const [activeTab, setActiveTab] = useState('core')
-  const [char, setChar] = useState(() => loadFromLocal(characterId, initialData))
-  const [saveStatus, setSaveStatus] = useState('')
-  const charRef = useRef(char)
-  const isFirstRender = useRef(true)
-
-  // Keep ref in sync for the interval to read
-  useEffect(() => {
-    charRef.current = char
-  }, [char])
-
-  // Save to localStorage on every change (skip initial load)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    localStorage.setItem(storageKey(characterId), JSON.stringify(char))
-    localStorage.setItem(dirtyKey(characterId), '1')
-  }, [char, characterId])
-
-  // Sync to backend every 10s if dirty
-  const syncToBackend = useCallback(async () => {
-    const isDirty = localStorage.getItem(dirtyKey(characterId))
-    if (isDirty !== '1') return
-
-    const current = charRef.current
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    }
-
-    try {
-      const charRes = await fetch(`${apiUrl}/api/characters/${characterId}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(mapToApi(current)),
-      })
-      if (!charRes.ok) throw new Error('Save failed')
-
-      // Sync stashes that have a stashId (i.e. exist on the backend)
-      const stashPromises = (current.stashes || [])
-        .filter((s) => s.stashId)
-        .map((s) =>
-          fetch(`${apiUrl}/api/characters/${characterId}/stashes/${s.stashId}`, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              name: s.name,
-              shared: s.shared || false,
-              platinum: Number(s.platinum) || 0,
-              gold: Number(s.gold) || 0,
-              electrum: Number(s.electrum) || 0,
-              silver: Number(s.silver) || 0,
-              copper: Number(s.copper) || 0,
-              equipment: JSON.stringify(s.equipment || []),
-            }),
-          })
-        )
-      await Promise.all(stashPromises)
-
-      localStorage.removeItem(dirtyKey(characterId))
-      setSaveStatus('Saved')
-      setTimeout(() => setSaveStatus(''), 2000)
-    } catch {
-      setSaveStatus('Sync error')
-      setTimeout(() => setSaveStatus(''), 3000)
-    }
-  }, [characterId, token, apiUrl])
-
-  useEffect(() => {
-    const interval = setInterval(syncToBackend, SYNC_INTERVAL)
-    return () => clearInterval(interval)
-  }, [syncToBackend])
-
-  // Flush to backend on unmount / page leave
-  useEffect(() => {
-    const flush = () => {
-      const isDirty = localStorage.getItem(dirtyKey(characterId))
-      if (isDirty !== '1') return
-      const current = charRef.current
-      const stashes = (current.stashes || [])
-        .filter((s) => s.stashId)
-        .map((s) => ({
-          stashId: s.stashId,
+  const stashPromises = (data.stashes || [])
+    .filter((s) => s.stashId)
+    .map((s) =>
+      fetch(`${API_URL}/api/characters/${characterId}/stashes/${s.stashId}`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({
           name: s.name,
           shared: s.shared || false,
           platinum: Number(s.platinum) || 0,
@@ -255,19 +166,23 @@ function CharacterSheet({ characterId, initialData, token, apiUrl }) {
           silver: Number(s.silver) || 0,
           copper: Number(s.copper) || 0,
           equipment: JSON.stringify(s.equipment || []),
-        }))
-      const body = JSON.stringify(mapToApi(current))
-      navigator.sendBeacon(
-        `${apiUrl}/api/characters/${characterId}/beacon`,
-        new Blob([JSON.stringify({ token, character: body, stashes })], { type: 'application/json' })
-      )
-    }
-    window.addEventListener('beforeunload', flush)
-    return () => {
-      window.removeEventListener('beforeunload', flush)
-      syncToBackend()
-    }
-  }, [characterId, token, apiUrl, syncToBackend])
+        }),
+      })
+    )
+  await Promise.all(stashPromises)
+}
+
+function CharacterSheet({ characterId, initialData, token }) {
+  const [activeTab, setActiveTab] = useState('core')
+  const [saveStatus, setSaveStatus] = useState('')
+
+  const { data: char, setData: setChar } = usePersistence({
+    storageKey: `character_${characterId}`,
+    defaultValue: () => mapApiData(initialData),
+    saveToApi: (data, headers) => saveCharacterToApi(data, headers, characterId),
+    token,
+    onSaveStatus: setSaveStatus,
+  })
 
   const set = (field, value) => {
     setChar((prev) => ({ ...prev, [field]: value }))
