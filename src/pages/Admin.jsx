@@ -105,6 +105,7 @@ function Admin() {
                   value={u.role}
                   onChange={(e) => updateRole(u.userId, e.target.value)}
                 >
+                  <option value="Guest">Guest</option>
                   <option value="User">User</option>
                   <option value="Admin">Admin</option>
                 </select>

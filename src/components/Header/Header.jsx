@@ -11,6 +11,7 @@ function Header() {
   const compact = pathname === '/vtt'
   const vttModal = useVttModal()
   const navigate = useNavigate()
+  const isUser = user && user.role !== 'Guest'
 
   return (
     <header className="header">
@@ -44,13 +45,13 @@ function Header() {
         ) : (
           <Link to="/weapon-mastery" className="menu-link">Weapon Mastery</Link>
         )}
-        {user && (compact ? (
+        {isUser && (compact ? (
           <button className="menu-link" onClick={() => vttModal.openPage('expedition')}>Expedition</button>
         ) : (
           <Link to="/expedition" className="menu-link">Expedition</Link>
         ))}
-        {user && <Link to="/vtt" className="menu-link">VTT</Link>}
-        {user && (compact ? (
+        {isUser && <Link to="/vtt" className="menu-link">VTT</Link>}
+        {isUser && (compact ? (
           <button className="menu-link" onClick={() => vttModal.openCharacters()}>Characters</button>
         ) : (
           <Link to="/characters" className="menu-link">Characters</Link>

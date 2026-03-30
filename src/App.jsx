@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './auth/AuthContext'
+import { AuthProvider, useAuth } from './auth/AuthContext'
 import { VttModalProvider } from './components/VTT/VttModalContext'
 import Layout from './pages/Layout'
 import DevHome from './pages/DevHome'
@@ -18,6 +18,13 @@ import Expedition from './pages/Expedition'
 
 const isDev = import.meta.env.DEV
 
+function RequireUser({ children }) {
+  const { user } = useAuth()
+  if (!user) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--pale-gold)' }}><h2>Login Required</h2><p>You must be logged in to access this page.</p></div>
+  if (user.role === 'Guest') return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--pale-gold)' }}><h2>Access Restricted</h2><p>Your account has not yet been granted access to this feature. Ask the DM to upgrade your role.</p></div>
+  return children
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -32,12 +39,12 @@ function App() {
             <Route path="lore" element={<Lore />} />
             <Route path="weapon-mastery" element={<WeaponMastery />} />
             <Route path="textcrawl" element={<TextCrawlPage />} />
-            <Route path="vtt" element={<Workbench />} />
+            <Route path="vtt" element={<RequireUser><Workbench /></RequireUser>} />
             <Route path="login" element={<Login />} />
             <Route path="admin" element={<Admin />} />
-            <Route path="characters" element={<Characters />} />
-            <Route path="characters/:characterId" element={<CharacterSheetPage />} />
-            <Route path="expedition" element={<Expedition />} />
+            <Route path="characters" element={<RequireUser><Characters /></RequireUser>} />
+            <Route path="characters/:characterId" element={<RequireUser><CharacterSheetPage /></RequireUser>} />
+            <Route path="expedition" element={<RequireUser><Expedition /></RequireUser>} />
           </Route>
           {isDev && <Route path="/workbench" element={<Workbench />} />}
         </Routes>
