@@ -28,6 +28,7 @@ export function useVttConnection(callbacks) {
     connection.on('SceneSwitched', (scene) => cbRef.current.onSceneSwitched?.(scene))
     connection.on('SceneDeleted', (sceneId) => cbRef.current.onSceneDeleted?.(sceneId))
     connection.on('InitiativeUpdated', (initiative) => cbRef.current.onInitiativeUpdated?.(initiative))
+    connection.on('BackupRestored', () => cbRef.current.onBackupRestored?.())
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -55,10 +56,12 @@ export function useVttConnection(callbacks) {
   const deleteScene = (sceneId) => connectionRef.current?.invoke('DeleteScene', sceneId).catch(console.error)
   const updateInitiative = (initiative) => connectionRef.current?.invoke('UpdateInitiative', initiative).catch(console.error)
 
+  const rejoinSession = () => connectionRef.current?.invoke('JoinSession').catch(console.error)
+
   const disconnect = () => {
     connectionRef.current?.stop()
     setConnected(false)
   }
 
-  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, disconnect }
+  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, rejoinSession, disconnect }
 }

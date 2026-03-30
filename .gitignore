@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Bun
+bun.lock
+
 # Claude
 .claude/settings.local.json

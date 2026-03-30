@@ -104,6 +104,11 @@ function VTT() {
   const [newSceneMap, setNewSceneMap] = useState(maps[0]?.id || '')
   const sceneDirtyRef = useRef(false)
 
+  // Backup restore state
+  const [showRestoreModal, setShowRestoreModal] = useState(false)
+  const [backupTimestamps, setBackupTimestamps] = useState([])
+  const [restoring, setRestoring] = useState(false)
+
   // Mark scenes dirty on any scene/counter/grid change
   const markScenesDirty = () => { sceneDirtyRef.current = true }
 
@@ -256,6 +261,10 @@ function VTT() {
     onMessage: (msg) => {
       setMessages((prev) => [...prev.slice(-499), msg])
     },
+    onBackupRestored: () => {
+      // Server restored from backup — re-join to get fresh state
+      vtt.rejoinSession()
+    },
   })
 
   // Register disconnect for the header button
@@ -267,7 +276,12 @@ function VTT() {
   const loadScene = (scene) => {
     loadingSceneRef.current = true
     setActiveMapId(scene.mapId || '')
-    const resolved = (scene.counters || []).map((c) => ({
+    const seen = new Set()
+    const resolved = (scene.counters || []).filter((c) => {
+      if (seen.has(c.id)) return false
+      seen.add(c.id)
+      return true
+    }).map((c) => ({
       id: c.id,
       tokenId: c.tokenId,
       src: tokenSrcMap[c.tokenId] || '',
@@ -288,6 +302,34 @@ function VTT() {
     }
     // Allow sync again after React has processed the state updates
     requestAnimationFrame(() => { loadingSceneRef.current = false })
+  }
+
+  // Backup restore functions
+  const fetchBackups = () => {
+    fetch(`${API_URL}/api/scenes/backups`, {
+      headers: { 'Authorization': `Bearer ${user.token}` },
+    })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => {
+        setBackupTimestamps(data || [])
+        setShowRestoreModal(true)
+      })
+      .catch(() => {})
+  }
+
+  const restoreBackup = (timestamp) => {
+    if (!confirm('Restore scene state from this backup? Current state will be replaced.')) return
+    setRestoring(true)
+    fetch(`${API_URL}/api/scenes/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+      body: JSON.stringify({ timestamp }),
+    })
+      .then((res) => {
+        if (res.ok) setShowRestoreModal(false)
+      })
+      .catch(() => {})
+      .finally(() => setRestoring(false))
   }
 
   // Broadcast initiative state to other clients
@@ -967,6 +1009,14 @@ function VTT() {
             Clear State
           </button>
         )}
+        {isDM && (
+          <button
+            className="vtt-grid-lock-btn"
+            onClick={fetchBackups}
+          >
+            Restore Backup
+          </button>
+        )}
         {charId && (
           <button className="vtt-grid-lock-btn" onClick={() => vttModal.openCharSheet(charId)}>
             Character Sheet
@@ -1370,6 +1420,41 @@ function VTT() {
             {vttModal.modal.page === 'lore' && <Lore />}
             {vttModal.modal.page === 'recap' && <Recap />}
             {vttModal.modal.page === 'expedition' && <Expedition />}
+          </div>
+        </div>
+      </div>
+    )}
+    {showRestoreModal && (
+      <div className="vtt-modal-overlay" onClick={() => setShowRestoreModal(false)}>
+        <div className="vtt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="vtt-modal-header">
+            <span>Restore from Backup</span>
+            <button className="vtt-modal-close" onClick={() => setShowRestoreModal(false)}>&#x2715;</button>
+          </div>
+          <div className="vtt-modal-body" style={{ maxHeight: 400, overflowY: 'auto' }}>
+            {backupTimestamps.length === 0 ? (
+              <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No backups available yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 0' }}>
+                {backupTimestamps.map((ts) => {
+                  const d = new Date(ts)
+                  const ago = Math.round((Date.now() - d.getTime()) / 60000)
+                  const label = ago < 1 ? 'Just now' : ago < 60 ? `${ago}m ago` : `${Math.round(ago / 60)}h ago`
+                  return (
+                    <button
+                      key={ts}
+                      className="vtt-grid-lock-btn"
+                      style={{ textAlign: 'left', padding: '6px 12px', justifyContent: 'space-between', display: 'flex' }}
+                      disabled={restoring}
+                      onClick={() => restoreBackup(ts)}
+                    >
+                      <span>{d.toLocaleTimeString()}</span>
+                      <span style={{ color: '#999', fontSize: '0.85em' }}>{label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
