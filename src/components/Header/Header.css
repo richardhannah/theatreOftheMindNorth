@@ -52,12 +52,14 @@
   flex: 1;
 }
 
-.menu-link-admin {
+.menu-link-admin,
+.menu-link-disconnect {
   background: var(--blood-crimson);
   border-color: var(--blood-crimson);
 }
 
-.menu-link-admin:hover {
+.menu-link-admin:hover,
+.menu-link-disconnect:hover {
   background: #a00000;
 }
 

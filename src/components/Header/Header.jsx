@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { useVttModal } from '../VTT/VttModalContext'
 import logo from '../../assets/WebsiteLogo1024.png'
@@ -10,6 +10,7 @@ function Header() {
   const { pathname } = useLocation()
   const compact = pathname === '/vtt'
   const vttModal = useVttModal()
+  const navigate = useNavigate()
 
   return (
     <header className="header">
@@ -21,15 +22,7 @@ function Header() {
         </div>
       )}
       <nav className="header-menubar">
-        {compact ? (
-          <button className="menu-link" onClick={() => {
-            if (confirm('Leaving the VTT will disconnect you from the video chat. Continue?')) {
-              window.location.href = '/'
-            }
-          }}>Home</button>
-        ) : (
-          <Link to="/" className="menu-link">Home</Link>
-        )}
+        {!compact && <Link to="/" className="menu-link">Home</Link>}
         {compact ? (
           <button className="menu-link" onClick={() => vttModal.openPage('recap')}>Recap</button>
         ) : (
@@ -63,6 +56,12 @@ function Header() {
           <Link to="/characters" className="menu-link">Characters</Link>
         ))}
         <span className="menu-spacer" />
+        {compact && (
+          <button className="menu-link menu-link-disconnect" onClick={() => {
+            vttModal.disconnect()
+            navigate('/')
+          }}>Disconnect</button>
+        )}
         {user?.role === 'Admin' && (
           <Link to="/admin" className="menu-link menu-link-admin">Admin</Link>
         )}

@@ -27,6 +27,7 @@ export function useVttConnection(callbacks) {
     connection.on('SceneCreated', (scene) => cbRef.current.onSceneCreated?.(scene))
     connection.on('SceneSwitched', (scene) => cbRef.current.onSceneSwitched?.(scene))
     connection.on('SceneDeleted', (sceneId) => cbRef.current.onSceneDeleted?.(sceneId))
+    connection.on('InitiativeUpdated', (initiative) => cbRef.current.onInitiativeUpdated?.(initiative))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -52,6 +53,12 @@ export function useVttConnection(callbacks) {
   const createScene = (id, name, mapId) => connectionRef.current?.invoke('CreateScene', id, name, mapId).catch(console.error)
   const switchScene = (sceneId) => connectionRef.current?.invoke('SwitchScene', sceneId).catch(console.error)
   const deleteScene = (sceneId) => connectionRef.current?.invoke('DeleteScene', sceneId).catch(console.error)
+  const updateInitiative = (initiative) => connectionRef.current?.invoke('UpdateInitiative', initiative).catch(console.error)
 
-  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene }
+  const disconnect = () => {
+    connectionRef.current?.stop()
+    setConnected(false)
+  }
+
+  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, disconnect }
 }

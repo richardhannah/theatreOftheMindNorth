@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import tokens from './tokens'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
@@ -40,6 +40,8 @@ function loadGridSettings() {
 const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
 const mapSrcMap = Object.fromEntries(maps.map((m) => [m.id, m.src]))
 
+const INITIATIVE_RESET = { combatActive: false, initMods: {}, initRolls: {}, initOrder: [], initTurn: 0 }
+
 function VTT() {
   const { user } = useAuth()
   const isDM = user?.role === 'Admin'
@@ -60,6 +62,33 @@ function VTT() {
   const chatResizing = useRef(false)
   const chatResizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
   const [showScenePanel, setShowScenePanel] = useState(false)
+  const [combatActive, setCombatActive] = useState(false)
+  const [initMods, setInitMods] = useState({})
+  const [initRolls, setInitRolls] = useState({})
+  const [initOrder, setInitOrder] = useState([])
+  const [initTurn, setInitTurn] = useState(0)
+  const initBarRef = useRef(null)
+
+  const applyInitiativeState = (data) => {
+    setCombatActive(data.combatActive || false)
+    setInitMods(data.initMods || {})
+    setInitRolls(data.initRolls || {})
+    setInitOrder(data.initOrder || [])
+    setInitTurn(data.initTurn || 0)
+  }
+
+  // Scroll to keep active token at a fixed position (4th slot) after the 4th turn
+  useEffect(() => {
+    if (!initBarRef.current || initOrder.length === 0 || initTurn < 4) return
+    const activeEl = initBarRef.current.querySelector(`[data-init-idx="${initTurn}"]`)
+    const anchorEl = initBarRef.current.querySelector('[data-init-idx="3"]')
+    if (activeEl && anchorEl) {
+      const anchorOffset = anchorEl.offsetLeft
+      const activeOffset = activeEl.offsetLeft
+      const scrollTarget = activeOffset - anchorOffset
+      initBarRef.current.scrollTo({ left: scrollTarget, behavior: 'smooth' })
+    }
+  }, [initTurn, initOrder])
   const [contextMenu, setContextMenu] = useState(null) // { x, y, counterId }
   const [statusModal, setStatusModal] = useState(null) // counterId
   const vttModal = useVttModal()
@@ -203,6 +232,9 @@ function VTT() {
       if (state.scene) {
         loadScene(state.scene)
       }
+      if (state.initiative) {
+        applyInitiativeState(state.initiative)
+      }
     },
     onSceneCreated: (scene) => {
       setScenes((prev) => [...prev, { id: scene.id, name: scene.name, mapId: scene.mapId }])
@@ -218,10 +250,19 @@ function VTT() {
       setActiveSceneId((prev) => prev === sceneId ? '' : prev)
       markScenesDirty()
     },
+    onInitiativeUpdated: (initiative) => {
+      applyInitiativeState(initiative)
+    },
     onMessage: (msg) => {
       setMessages((prev) => [...prev.slice(-499), msg])
     },
   })
+
+  // Register disconnect for the header button
+  useEffect(() => {
+    vttModal.registerDisconnect(vtt.disconnect)
+    return () => vttModal.registerDisconnect(null)
+  }, [vtt.disconnect, vttModal])
 
   const loadScene = (scene) => {
     loadingSceneRef.current = true
@@ -248,6 +289,26 @@ function VTT() {
     // Allow sync again after React has processed the state updates
     requestAnimationFrame(() => { loadingSceneRef.current = false })
   }
+
+  // Broadcast initiative state to other clients
+  const broadcastInitiative = (overrides = {}) => {
+    const state = {
+      combatActive,
+      initMods,
+      initRolls,
+      initOrder,
+      initTurn,
+      ...overrides,
+    }
+    vtt.updateInitiative(state)
+  }
+
+  const orderedCounters = useMemo(() =>
+    initOrder.length > 0
+      ? initOrder.map((id) => counters.find((c) => c.id === id)).filter(Boolean)
+      : counters,
+    [initOrder, counters]
+  )
 
   // Auto-scroll chat
   useEffect(() => {
@@ -875,6 +936,37 @@ function VTT() {
             Scenes
           </button>
         )}
+        {isDM && (
+          <button
+            className={`vtt-grid-lock-btn${combatActive ? ' vtt-combat-active' : ''}`}
+            onClick={() => {
+              if (combatActive) {
+                applyInitiativeState(INITIATIVE_RESET)
+                broadcastInitiative(INITIATIVE_RESET)
+              } else {
+                setCombatActive(true)
+                broadcastInitiative({ combatActive: true })
+              }
+            }}
+          >
+            {combatActive ? 'End Combat' : 'Start Combat'}
+          </button>
+        )}
+        {isDM && (
+          <button
+            className="vtt-grid-lock-btn"
+            onClick={() => {
+              if (confirm('Clear all counters and reset scene state? This cannot be undone.')) {
+                setCounters([])
+                applyInitiativeState(INITIATIVE_RESET)
+                broadcastInitiative(INITIATIVE_RESET)
+                markScenesDirty()
+              }
+            }}
+          >
+            Clear State
+          </button>
+        )}
         {charId && (
           <button className="vtt-grid-lock-btn" onClick={() => vttModal.openCharSheet(charId)}>
             Character Sheet
@@ -978,6 +1070,107 @@ function VTT() {
           </div>
         </div>
       )}
+      {combatActive && (() => {
+        const rollInitiative = () => {
+          const rolls = {}
+          counters.forEach((c) => {
+            const roll = Math.floor(Math.random() * 6) + 1
+            const mod = initMods[c.id] || 0
+            rolls[c.id] = { roll, total: roll + mod }
+          })
+          setInitRolls(rolls)
+          const sorted = [...counters]
+            .sort((a, b) => (rolls[b.id]?.total || 0) - (rolls[a.id]?.total || 0))
+            .map((c) => c.id)
+          setInitOrder(sorted)
+          setInitTurn(0)
+          broadcastInitiative({ combatActive: true, initRolls: rolls, initOrder: sorted, initTurn: 0 })
+        }
+
+        return (
+          <div className="vtt-initiative-wrap">
+            {counters.length > 0 && (() => {
+              const isLastTurn = initOrder.length > 0 && initTurn === initOrder.length - 1
+              const hasRolled = initOrder.length > 0
+              const roundOver = hasRolled && initTurn >= initOrder.length
+
+              if (isLastTurn || roundOver) {
+                return (
+                  <button className="vtt-init-roll-btn" onClick={() => {
+                    const roundReset = { ...INITIATIVE_RESET, combatActive: true, initMods }
+                    applyInitiativeState(roundReset)
+                    broadcastInitiative(roundReset)
+                    if (initBarRef.current) initBarRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+                  }}>
+                    New Round
+                  </button>
+                )
+              }
+
+              if (!hasRolled) {
+                return (
+                  <button className="vtt-init-roll-btn" onClick={rollInitiative}>
+                    Roll Initiative
+                  </button>
+                )
+              }
+
+              return null
+            })()}
+            <div className="vtt-initiative" ref={initBarRef} style={initOrder.length > 4 ? { paddingRight: 'calc(100% - 400px)' } : undefined}>
+            {orderedCounters.map((c, idx) => {
+              const mod = initMods[c.id] || 0
+              const rollData = initRolls[c.id]
+              const isActive = initOrder.length > 0 && initOrder[initTurn] === c.id
+              return (
+                <div
+                  key={c.id}
+                  className={`vtt-init-token${isActive ? ' vtt-init-active' : ''}`}
+                  data-init-idx={idx}
+                  title={rollData ? `Roll: ${rollData.roll}${mod !== 0 ? (mod > 0 ? ` + ${mod}` : ` - ${Math.abs(mod)}`) : ''} = ${rollData.total}` : ''}
+                >
+                  <div className="vtt-init-token-top">
+                    {c.src ? (
+                      <img src={c.src} alt={c.label} className="vtt-init-img" />
+                    ) : (
+                      <InitialsToken name={c.label || '?'} size={28} />
+                    )}
+                    <span className="vtt-init-label">{c.label}</span>
+                    {isActive && (
+                      <button
+                        className="vtt-init-next-btn"
+                        onClick={() => {
+                          const nextTurn = initTurn + 1
+                          setInitTurn(nextTurn)
+                          broadcastInitiative({ combatActive: true, initTurn: nextTurn })
+                        }}
+                        title="Next turn"
+                      >&#x25B6;</button>
+                    )}
+                  </div>
+                  <div className="vtt-init-mod">
+                    <button className="vtt-init-mod-btn" onClick={() => {
+                      const newMods = { ...initMods, [c.id]: (initMods[c.id] || 0) - 1 }
+                      setInitMods(newMods)
+                      broadcastInitiative({ combatActive: true, initMods: newMods })
+                    }}>-</button>
+                    <span className="vtt-init-mod-val">{mod >= 0 ? `+${mod}` : mod}</span>
+                    <button className="vtt-init-mod-btn" onClick={() => {
+                      const newMods = { ...initMods, [c.id]: (initMods[c.id] || 0) + 1 }
+                      setInitMods(newMods)
+                      broadcastInitiative({ combatActive: true, initMods: newMods })
+                    }}>+</button>
+                  </div>
+                </div>
+              )
+            })}
+            {counters.length === 0 && (
+              <span className="vtt-init-empty">No tokens on the board</span>
+            )}
+            </div>
+          </div>
+        )
+      })()}
       <div
         className={`vtt-viewport${gridDecoupled ? ' vtt-viewport-grid-mode' : ''}`}
         ref={viewportRef}
