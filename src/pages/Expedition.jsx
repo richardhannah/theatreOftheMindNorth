@@ -161,7 +161,7 @@ async function saveExpeditionToApi(data, headers) {
 
 function Expedition() {
   const { user } = useAuth()
-  const isDM = user?.role === 'Admin'
+  const isDM = user?.role === 'Admin' || user?.role === 'GamesMaster'
   const [showTokenPicker, setShowTokenPicker] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
 

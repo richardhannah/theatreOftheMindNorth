@@ -107,6 +107,7 @@ function Admin() {
                 >
                   <option value="Guest">Guest</option>
                   <option value="User">User</option>
+                  <option value="GamesMaster">Games Master</option>
                   <option value="Admin">Admin</option>
                 </select>
               </td>

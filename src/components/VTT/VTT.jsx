@@ -44,7 +44,7 @@ const INITIATIVE_RESET = { combatActive: false, initMods: {}, initRolls: {}, ini
 
 function VTT() {
   const { user } = useAuth()
-  const isDM = user?.role === 'Admin'
+  const isDM = user?.role === 'Admin' || user?.role === 'GamesMaster'
   const [, forceRender] = useState(0)
   const savedGrid = useRef(loadGridSettings())
   const [gridW, setGridW] = useState(savedGrid.current?.gridW ?? 20)
