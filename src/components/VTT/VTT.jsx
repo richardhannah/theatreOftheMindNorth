@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import tokens from './tokens'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
@@ -40,6 +40,7 @@ function loadGridSettings() {
 const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
 const mapSrcMap = Object.fromEntries(maps.map((m) => [m.id, m.src]))
 
+const GAME_TYPES = { DND: 'dnd', SHADOWRUN: 'shadowrun' }
 const INITIATIVE_RESET = { combatActive: false, initMods: {}, initRolls: {}, initOrder: [], initTurn: 0 }
 
 function VTT() {
@@ -63,6 +64,9 @@ function VTT() {
   const chatResizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
   const [showScenePanel, setShowScenePanel] = useState(false)
   const [combatActive, setCombatActive] = useState(false)
+  const [initGameType, setInitGameType] = useState(GAME_TYPES.DND)
+  const [initDice, setInitDice] = useState({})
+  const [initSeized, setInitSeized] = useState({})
   const [initMods, setInitMods] = useState({})
   const [initRolls, setInitRolls] = useState({})
   const [initOrder, setInitOrder] = useState([])
@@ -71,6 +75,9 @@ function VTT() {
 
   const applyInitiativeState = (data) => {
     setCombatActive(data.combatActive || false)
+    if (data.gameType) setInitGameType(data.gameType)
+    if (data.initDice) setInitDice(data.initDice)
+    if (data.initSeized !== undefined) setInitSeized(data.initSeized || {})
     setInitMods(data.initMods || {})
     setInitRolls(data.initRolls || {})
     setInitOrder(data.initOrder || [])
@@ -336,6 +343,9 @@ function VTT() {
   const broadcastInitiative = (overrides = {}) => {
     const state = {
       combatActive,
+      gameType: initGameType,
+      initDice,
+      initSeized,
       initMods,
       initRolls,
       initOrder,
@@ -345,12 +355,18 @@ function VTT() {
     vtt.updateInitiative(state)
   }
 
-  const orderedCounters = useMemo(() =>
-    initOrder.length > 0
-      ? initOrder.map((id) => counters.find((c) => c.id === id)).filter(Boolean)
-      : counters,
-    [initOrder, counters]
-  )
+  const orderedCounters = useMemo(() => {
+    if (initOrder.length === 0) return counters.map((c) => ({ ...c, initScore: null, initPass: null, done: false }))
+    return initOrder.map((entry) => {
+      // Shadowrun: entry is {id, score, pass, done?}, D&D: entry is a string id
+      const id = typeof entry === 'string' ? entry : entry.id
+      const score = typeof entry === 'string' ? null : entry.score
+      const pass = typeof entry === 'string' ? null : (entry.pass || null)
+      const done = typeof entry === 'string' ? false : (entry.done || false)
+      const counter = counters.find((c) => c.id === id)
+      return counter ? { ...counter, initScore: score, initPass: pass, done } : null
+    }).filter(Boolean)
+  }, [initOrder, counters])
 
   // Auto-scroll chat
   useEffect(() => {
@@ -995,6 +1011,20 @@ function VTT() {
           </button>
         )}
         {isDM && (
+          <select
+            className="vtt-grid-lock-btn"
+            value={initGameType}
+            onChange={(e) => {
+              setInitGameType(e.target.value)
+              broadcastInitiative({ gameType: e.target.value })
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <option value={GAME_TYPES.DND}>D&D</option>
+            <option value={GAME_TYPES.SHADOWRUN}>Shadowrun</option>
+          </select>
+        )}
+        {isDM && (
           <button
             className="vtt-grid-lock-btn"
             onClick={() => {
@@ -1121,17 +1151,101 @@ function VTT() {
         </div>
       )}
       {combatActive && (() => {
+        // Build Shadowrun initiative passes from character totals
+        const buildShadowrunPasses = (charTotals, seized = {}) => {
+          const entries = []
+          let pass = 1
+          let active = charTotals.map(({ id, total }) => ({ id, score: total }))
+          while (active.some((a) => a.score > 0 || seized[a.id])) {
+            // Characters act if score > 0, OR if they seized initiative
+            const passEntries = active
+              .filter((a) => a.score > 0 || seized[a.id])
+              .sort((a, b) => {
+                const aSeized = seized[a.id] ? 1 : 0
+                const bSeized = seized[b.id] ? 1 : 0
+                if (aSeized !== bSeized) return bSeized - aSeized
+                return b.score - a.score
+              })
+              .map((a) => ({ id: a.id, score: Math.max(a.score, 0), pass, seized: !!seized[a.id] }))
+            entries.push(...passEntries)
+            active = active.map((a) => ({ ...a, score: a.score - 10 }))
+            pass++
+            // Safety: stop if only seized characters remain and no one has score > 0
+            // (seized characters with no natural passes still only get passes while others do)
+            if (!active.some((a) => a.score > 0)) break
+          }
+          return entries
+        }
+
+        // Recalculate Shadowrun initiative, preserving active turn position
+        const recalcShadowrunInit = (newRolls, newMods, currentTurn) => {
+          // Collect entries that have already acted (before current turn)
+          const played = []
+          for (let i = 0; i < currentTurn; i++) {
+            const e = initOrder[i]
+            if (e && typeof e === 'object') played.push({ id: e.id, pass: e.pass })
+          }
+
+          // Identify the currently active entry
+          const activeEntry = initOrder[currentTurn]
+          const activeId = activeEntry ? (typeof activeEntry === 'string' ? activeEntry : activeEntry.id) : null
+          const activePass = activeEntry?.pass || null
+
+          const charTotals = counters.map((c) => {
+            const r = newRolls[c.id]
+            const mod = newMods[c.id] || 0
+            return { id: c.id, total: (r?.roll || 0) + mod }
+          })
+          const newOrder = buildShadowrunPasses(charTotals, initSeized)
+
+          // Mark entries that were already played with a `done` flag
+          const playedCounts = {}
+          played.forEach(({ id, pass }) => {
+            const key = `${id}:${pass}`
+            playedCounts[key] = (playedCounts[key] || 0) + 1
+          })
+
+          const markedOrder = newOrder.map((e) => {
+            const key = `${e.id}:${e.pass}`
+            if (playedCounts[key] > 0) {
+              playedCounts[key]--
+              return { ...e, done: true }
+            }
+            return e
+          })
+
+          // Find the active character — first non-done entry matching activeId in activePass,
+          // or if the active character moved to a different position, find them there
+          let newTurn = markedOrder.findIndex((e) => !e.done)
+          if (activeId) {
+            const match = markedOrder.findIndex((e) => e.id === activeId && e.pass === activePass && !e.done)
+            if (match >= 0) newTurn = match
+          }
+
+          return { order: markedOrder, turn: Math.max(0, newTurn) }
+        }
+
         const rollInitiative = () => {
           const rolls = {}
           counters.forEach((c) => {
-            const roll = Math.floor(Math.random() * 6) + 1
+            const numDice = (initGameType === GAME_TYPES.SHADOWRUN ? initDice[c.id] : null) || 1
+            let roll = 0
+            for (let i = 0; i < numDice; i++) roll += Math.floor(Math.random() * 6) + 1
             const mod = initMods[c.id] || 0
-            rolls[c.id] = { roll, total: roll + mod }
+            rolls[c.id] = { roll, total: roll + mod, numDice }
           })
           setInitRolls(rolls)
-          const sorted = [...counters]
-            .sort((a, b) => (rolls[b.id]?.total || 0) - (rolls[a.id]?.total || 0))
-            .map((c) => c.id)
+
+          let sorted
+          if (initGameType === GAME_TYPES.SHADOWRUN) {
+            const charTotals = counters.map((c) => ({ id: c.id, total: rolls[c.id]?.total || 0 }))
+            sorted = buildShadowrunPasses(charTotals, initSeized)
+          } else {
+            sorted = [...counters]
+              .sort((a, b) => (rolls[b.id]?.total || 0) - (rolls[a.id]?.total || 0))
+              .map((c) => c.id)
+          }
+
           setInitOrder(sorted)
           setInitTurn(0)
           broadcastInitiative({ combatActive: true, initRolls: rolls, initOrder: sorted, initTurn: 0 })
@@ -1140,14 +1254,15 @@ function VTT() {
         return (
           <div className="vtt-initiative-wrap">
             {counters.length > 0 && (() => {
-              const isLastTurn = initOrder.length > 0 && initTurn === initOrder.length - 1
               const hasRolled = initOrder.length > 0
-              const roundOver = hasRolled && initTurn >= initOrder.length
+              const remainingTurns = hasRolled ? orderedCounters.slice(initTurn).filter((e) => !e.done) : []
+              const isLastTurn = hasRolled && remainingTurns.length <= 1
+              const roundOver = hasRolled && remainingTurns.length === 0
 
               if (isLastTurn || roundOver) {
                 return (
                   <button className="vtt-init-roll-btn" onClick={() => {
-                    const roundReset = { ...INITIATIVE_RESET, combatActive: true, initMods }
+                    const roundReset = { ...INITIATIVE_RESET, combatActive: true, initMods, initSeized: {} }
                     applyInitiativeState(roundReset)
                     broadcastInitiative(roundReset)
                     if (initBarRef.current) initBarRef.current.scrollTo({ left: 0, behavior: 'smooth' })
@@ -1169,15 +1284,21 @@ function VTT() {
             })()}
             <div className="vtt-initiative" ref={initBarRef} style={initOrder.length > 4 ? { paddingRight: 'calc(100% - 400px)' } : undefined}>
             {orderedCounters.map((c, idx) => {
+              const showPassDivider = initGameType === GAME_TYPES.SHADOWRUN
+                && c.initPass != null
+                && (idx === 0 || orderedCounters[idx - 1]?.initPass !== c.initPass)
               const mod = initMods[c.id] || 0
               const rollData = initRolls[c.id]
-              const isActive = initOrder.length > 0 && initOrder[initTurn] === c.id
+              const isActive = initOrder.length > 0 && idx === initTurn && !c.done
               return (
+                <React.Fragment key={`${c.id}-${idx}`}>
+                {showPassDivider && (
+                  <div className="vtt-init-pass-divider">Pass {c.initPass}</div>
+                )}
                 <div
-                  key={c.id}
-                  className={`vtt-init-token${isActive ? ' vtt-init-active' : ''}`}
+                  className={`vtt-init-token${isActive ? ' vtt-init-active' : ''}${c.done ? ' vtt-init-done' : ''}`}
                   data-init-idx={idx}
-                  title={rollData ? `Roll: ${rollData.roll}${mod !== 0 ? (mod > 0 ? ` + ${mod}` : ` - ${Math.abs(mod)}`) : ''} = ${rollData.total}` : ''}
+                  title={rollData ? `${rollData.numDice > 1 ? `${rollData.numDice}d6: ` : ''}Roll: ${rollData.roll}${mod !== 0 ? (mod > 0 ? ` + ${mod}` : ` - ${Math.abs(mod)}`) : ''} = ${rollData.total}` : ''}
                 >
                   <div className="vtt-init-token-top">
                     {c.src ? (
@@ -1186,11 +1307,62 @@ function VTT() {
                       <InitialsToken name={c.label || '?'} size={28} />
                     )}
                     <span className="vtt-init-label">{c.label}</span>
+                    {c.initScore != null && (
+                      <span className="vtt-init-score">{c.initScore}</span>
+                    )}
+                    {isDM && initOrder.length > 0 && (
+                      <div className="vtt-init-reorder">
+                        <button
+                          className="vtt-init-reorder-btn"
+                          disabled={idx === 0}
+                          onClick={() => {
+                            const newOrder = [...initOrder]
+                            ;[newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]]
+                            setInitOrder(newOrder)
+                            // Adjust turn pointer if the swap affected it
+                            let newTurn = initTurn
+                            if (initTurn === idx) newTurn = idx - 1
+                            else if (initTurn === idx - 1) newTurn = idx
+                            setInitTurn(newTurn)
+                            broadcastInitiative({ combatActive: true, initOrder: newOrder, initTurn: newTurn })
+                          }}
+                          title="Move earlier"
+                        >&#x25C0;</button>
+                        <button
+                          className="vtt-init-reorder-btn"
+                          disabled={idx === orderedCounters.length - 1}
+                          onClick={() => {
+                            const newOrder = [...initOrder]
+                            ;[newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]]
+                            setInitOrder(newOrder)
+                            let newTurn = initTurn
+                            if (initTurn === idx) newTurn = idx + 1
+                            else if (initTurn === idx + 1) newTurn = idx
+                            setInitTurn(newTurn)
+                            broadcastInitiative({ combatActive: true, initOrder: newOrder, initTurn: newTurn })
+                          }}
+                          title="Move later"
+                        >&#x25B6;</button>
+                      </div>
+                    )}
+                    {initGameType === GAME_TYPES.SHADOWRUN && initOrder.length === 0 && (
+                      <button
+                        className={`vtt-init-seize-btn${initSeized[c.id] ? ' vtt-init-seized' : ''}`}
+                        onClick={() => {
+                          const newSeized = { ...initSeized, [c.id]: !initSeized[c.id] }
+                          setInitSeized(newSeized)
+                          broadcastInitiative({ combatActive: true, initSeized: newSeized })
+                        }}
+                        title={initSeized[c.id] ? 'Unseize initiative' : 'Seize initiative (Edge)'}
+                      >&#x26A1;</button>
+                    )}
                     {isActive && (
                       <button
                         className="vtt-init-next-btn"
                         onClick={() => {
-                          const nextTurn = initTurn + 1
+                          let nextTurn = initTurn + 1
+                          // Skip past done entries
+                          while (nextTurn < orderedCounters.length && orderedCounters[nextTurn]?.done) nextTurn++
                           setInitTurn(nextTurn)
                           broadcastInitiative({ combatActive: true, initTurn: nextTurn })
                         }}
@@ -1198,20 +1370,82 @@ function VTT() {
                       >&#x25B6;</button>
                     )}
                   </div>
+                  {initGameType === GAME_TYPES.SHADOWRUN && (
+                    <div className="vtt-init-mod">
+                      <button className="vtt-init-mod-btn" onClick={() => {
+                        const oldCount = initDice[c.id] || 1
+                        const newCount = Math.max(1, oldCount - 1)
+                        if (newCount === oldCount) return
+                        const newDice = { ...initDice, [c.id]: newCount }
+                        setInitDice(newDice)
+                        if (initOrder.length > 0) {
+                          // Mid-combat: subtract one die's worth (average 3.5, but use actual difference)
+                          const diff = Math.floor(Math.random() * 6) + 1
+                          const newRolls = { ...initRolls, [c.id]: { ...initRolls[c.id], roll: initRolls[c.id].roll - diff, total: initRolls[c.id].total - diff, numDice: newCount } }
+                          setInitRolls(newRolls)
+                          const { order: newOrder, turn: newTurn } = recalcShadowrunInit(newRolls, initMods, initTurn)
+                          setInitOrder(newOrder)
+                          setInitTurn(newTurn)
+                          broadcastInitiative({ combatActive: true, initDice: newDice, initRolls: newRolls, initOrder: newOrder, initTurn: newTurn })
+                        } else {
+                          broadcastInitiative({ combatActive: true, initDice: newDice })
+                        }
+                      }}>-</button>
+                      <span className="vtt-init-mod-val">{initDice[c.id] || 1}d6</span>
+                      <button className="vtt-init-mod-btn" onClick={() => {
+                        const oldCount = initDice[c.id] || 1
+                        const newCount = Math.min(5, oldCount + 1)
+                        if (newCount === oldCount) return
+                        const newDice = { ...initDice, [c.id]: newCount }
+                        setInitDice(newDice)
+                        if (initOrder.length > 0) {
+                          // Mid-combat: roll the extra die and add to score
+                          const extraRoll = Math.floor(Math.random() * 6) + 1
+                          const newRolls = { ...initRolls, [c.id]: { ...initRolls[c.id], roll: initRolls[c.id].roll + extraRoll, total: initRolls[c.id].total + extraRoll, numDice: newCount } }
+                          setInitRolls(newRolls)
+                          const { order: newOrder, turn: newTurn } = recalcShadowrunInit(newRolls, initMods, initTurn)
+                          setInitOrder(newOrder)
+                          setInitTurn(newTurn)
+                          broadcastInitiative({ combatActive: true, initDice: newDice, initRolls: newRolls, initOrder: newOrder, initTurn: newTurn })
+                        } else {
+                          broadcastInitiative({ combatActive: true, initDice: newDice })
+                        }
+                      }}>+</button>
+                    </div>
+                  )}
                   <div className="vtt-init-mod">
                     <button className="vtt-init-mod-btn" onClick={() => {
                       const newMods = { ...initMods, [c.id]: (initMods[c.id] || 0) - 1 }
                       setInitMods(newMods)
-                      broadcastInitiative({ combatActive: true, initMods: newMods })
+                      if (initGameType === GAME_TYPES.SHADOWRUN && initOrder.length > 0) {
+                        const newRolls = { ...initRolls, [c.id]: { ...initRolls[c.id], total: initRolls[c.id].total - 1 } }
+                        setInitRolls(newRolls)
+                        const { order: newOrder, turn: newTurn } = recalcShadowrunInit(newRolls, newMods, initTurn)
+                        setInitOrder(newOrder)
+                        setInitTurn(newTurn)
+                        broadcastInitiative({ combatActive: true, initMods: newMods, initRolls: newRolls, initOrder: newOrder, initTurn: newTurn })
+                      } else {
+                        broadcastInitiative({ combatActive: true, initMods: newMods })
+                      }
                     }}>-</button>
                     <span className="vtt-init-mod-val">{mod >= 0 ? `+${mod}` : mod}</span>
                     <button className="vtt-init-mod-btn" onClick={() => {
                       const newMods = { ...initMods, [c.id]: (initMods[c.id] || 0) + 1 }
                       setInitMods(newMods)
-                      broadcastInitiative({ combatActive: true, initMods: newMods })
+                      if (initGameType === GAME_TYPES.SHADOWRUN && initOrder.length > 0) {
+                        const newRolls = { ...initRolls, [c.id]: { ...initRolls[c.id], total: initRolls[c.id].total + 1 } }
+                        setInitRolls(newRolls)
+                        const { order: newOrder, turn: newTurn } = recalcShadowrunInit(newRolls, newMods, initTurn)
+                        setInitOrder(newOrder)
+                        setInitTurn(newTurn)
+                        broadcastInitiative({ combatActive: true, initMods: newMods, initRolls: newRolls, initOrder: newOrder, initTurn: newTurn })
+                      } else {
+                        broadcastInitiative({ combatActive: true, initMods: newMods })
+                      }
                     }}>+</button>
                   </div>
                 </div>
+                </React.Fragment>
               )
             })}
             {counters.length === 0 && (
