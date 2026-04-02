@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePersistence } from '../../hooks/usePersistence'
 import { API_URL } from '../../config'
 import TabCore from './TabCore'
@@ -49,6 +49,8 @@ const EMPTY_CHAR = {
     { name: 'Carried', removable: false, platinum: '', gold: '', electrum: '', silver: '', copper: '', equipment: [] },
     { name: 'Expedition Caravan', removable: false, platinum: '', gold: '', electrum: '', silver: '', copper: '', equipment: [] },
   ],
+  // Games Master
+  gamesMasterId: '',
   // Notes
   notes: '',
 }
@@ -105,6 +107,7 @@ function mapApiData(data) {
     preparedSpells: typeof c.preparedSpells === 'string' ? JSON.parse(c.preparedSpells) : (c.preparedSpells || []),
     spellbook: typeof c.spellbook === 'string' ? JSON.parse(c.spellbook) : (c.spellbook || []),
     stashes: stashes.length > 0 ? stashes : EMPTY_CHAR.stashes,
+    gamesMasterId: c.gamesMasterId || '',
     notes: c.notes || '',
   }
 }
@@ -141,6 +144,7 @@ function mapToApi(char) {
     weaponMasteries: JSON.stringify(char.weaponMasteries),
     preparedSpells: JSON.stringify(char.preparedSpells),
     spellbook: JSON.stringify(char.spellbook),
+    gamesMasterId: char.gamesMasterId || null,
     notes: char.notes,
   }
 }
@@ -175,6 +179,16 @@ async function saveCharacterToApi(data, headers, characterId) {
 function CharacterSheet({ characterId, initialData, token }) {
   const [activeTab, setActiveTab] = useState('core')
   const [saveStatus, setSaveStatus] = useState('')
+  const [gameMasters, setGameMasters] = useState([])
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/characters/gamemasters`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setGameMasters(data || []))
+      .catch(() => {})
+  }, [token])
 
   const { data: char, setData: setChar } = usePersistence({
     storageKey: `character_${characterId}`,
@@ -204,7 +218,7 @@ function CharacterSheet({ characterId, initialData, token }) {
       </div>
 
       <div className="cs-tab-content">
-        {activeTab === 'core' && <TabCore char={char} set={set} setChar={setChar} />}
+        {activeTab === 'core' && <TabCore char={char} set={set} setChar={setChar} gameMasters={gameMasters} />}
         {activeTab === 'abilities' && <TabAbilities char={char} set={set} setChar={setChar} />}
         {activeTab === 'spells' && <TabSpells char={char} set={set} setChar={setChar} />}
         {activeTab === 'equipment' && <TabEquipment char={char} set={set} setChar={setChar} />}

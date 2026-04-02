@@ -41,7 +41,7 @@ function abilityMod(score) {
   return '-3'
 }
 
-function TabCore({ char, set, setChar }) {
+function TabCore({ char, set, setChar, gameMasters = [] }) {
   const [showTokenPicker, setShowTokenPicker] = useState(false)
   const tokenSrc = char.tokenId ? tokenSrcMap[char.tokenId] : null
 
@@ -91,6 +91,19 @@ function TabCore({ char, set, setChar }) {
               value={char.playerName}
               onChange={(e) => set('playerName', e.target.value)}
             />
+          </div>
+          <div className="cs-field">
+            <label className="cs-label">Games Master</label>
+            <select
+              className="cs-select"
+              value={char.gamesMasterId || ''}
+              onChange={(e) => set('gamesMasterId', e.target.value || '')}
+            >
+              <option value="">— None —</option>
+              {gameMasters.map((gm) => (
+                <option key={gm.userId} value={gm.userId}>{gm.username}</option>
+              ))}
+            </select>
           </div>
         </div>
       {showTokenPicker && (
