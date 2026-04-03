@@ -97,6 +97,7 @@ function VTT() {
     }
   }, [initTurn, initOrder])
   const [contextMenu, setContextMenu] = useState(null) // { x, y, counterId }
+  const [renameState, setRenameState] = useState(null) // { counterId, label }
   const [statusModal, setStatusModal] = useState(null) // counterId
   const vttModal = useVttModal()
   const [videoSidebarOpen, setVideoSidebarOpen] = useState(true)
@@ -229,6 +230,9 @@ function VTT() {
     },
     onCounterRemoved: (id) => {
       setCounters((prev) => prev.filter((c) => c.id !== id))
+    },
+    onCounterRenamed: (id, label) => {
+      setCounters((prev) => prev.map((c) => c.id === id ? { ...c, label, baseLabel: label.replace(/\s\d+$/, '') } : c))
     },
     onGridUpdated: (grid) => {
       setGridW(grid.gridW)
@@ -672,6 +676,13 @@ function VTT() {
 
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
+  }
+
+  const renameCounter = (counterId, newLabel) => {
+    if (!newLabel.trim()) return
+    setCounters((prev) => prev.map((c) => c.id === counterId ? { ...c, label: newLabel.trim(), baseLabel: newLabel.trim().replace(/\s\d+$/, '') } : c))
+    vtt.renameCounter(counterId, newLabel.trim())
+    markScenesDirty()
   }
 
   const removeCounter = (counterId) => {
@@ -1593,18 +1604,44 @@ function VTT() {
         )}
         {/* Context menu */}
         {contextMenu && (
-          <div className="vtt-ctx-backdrop" onClick={() => setContextMenu(null)} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }}>
+          <div className="vtt-ctx-backdrop" onClick={() => { setContextMenu(null); setRenameState(null) }} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); setRenameState(null) }}>
             <div
               className="vtt-ctx-menu"
               style={{ left: contextMenu.x, top: contextMenu.y }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button className="vtt-ctx-item" onClick={() => { setStatusModal(contextMenu.counterId); setContextMenu(null) }}>
-                Status Effects
-              </button>
-              <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeCounter(contextMenu.counterId); setContextMenu(null) }}>
-                Remove
-              </button>
+              {renameState && renameState.counterId === contextMenu.counterId ? (
+                <form className="vtt-ctx-rename" onSubmit={(e) => {
+                  e.preventDefault()
+                  renameCounter(renameState.counterId, renameState.label)
+                  setRenameState(null)
+                  setContextMenu(null)
+                }}>
+                  <input
+                    className="vtt-ctx-rename-input"
+                    autoFocus
+                    value={renameState.label}
+                    onChange={(e) => setRenameState({ ...renameState, label: e.target.value })}
+                    onKeyDown={(e) => { if (e.key === 'Escape') { setRenameState(null); setContextMenu(null) } }}
+                  />
+                  <button type="submit" className="vtt-ctx-item">OK</button>
+                </form>
+              ) : (
+                <>
+                  <button className="vtt-ctx-item" onClick={() => {
+                    const counter = counters.find((c) => c.id === contextMenu.counterId)
+                    setRenameState({ counterId: contextMenu.counterId, label: counter?.label || '' })
+                  }}>
+                    Rename
+                  </button>
+                  <button className="vtt-ctx-item" onClick={() => { setStatusModal(contextMenu.counterId); setContextMenu(null) }}>
+                    Status Effects
+                  </button>
+                  <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeCounter(contextMenu.counterId); setContextMenu(null) }}>
+                    Remove
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -1501,6 +1501,23 @@
   color: #fff;
 }
 
+.vtt-ctx-rename {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.vtt-ctx-rename-input {
+  background: var(--charcoal);
+  border: 1px solid var(--pale-gold);
+  color: var(--pale-gold);
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 3px;
+  outline: none;
+  width: 140px;
+}
+
 .vtt-grid {
   position: absolute;
   inset: 0;

@@ -21,6 +21,7 @@ export function useVttConnection(callbacks) {
     connection.on('CounterAdded', (counter) => cbRef.current.onCounterAdded?.(counter))
     connection.on('CounterMoved', (id, x, y) => cbRef.current.onCounterMoved?.(id, x, y))
     connection.on('CounterRemoved', (id) => cbRef.current.onCounterRemoved?.(id))
+    connection.on('CounterRenamed', (id, label) => cbRef.current.onCounterRenamed?.(id, label))
     connection.on('GridUpdated', (grid) => cbRef.current.onGridUpdated?.(grid))
     connection.on('FullState', (state) => cbRef.current.onFullState?.(state))
     connection.on('ReceiveMessage', (msg) => cbRef.current.onMessage?.(msg))
@@ -49,6 +50,7 @@ export function useVttConnection(callbacks) {
   const addCounter = (counter) => connectionRef.current?.invoke('AddCounter', counter).catch(console.error)
   const moveCounter = (id, x, y) => connectionRef.current?.invoke('MoveCounter', id, x, y).catch(console.error)
   const removeCounter = (id) => connectionRef.current?.invoke('RemoveCounter', id).catch(console.error)
+  const renameCounter = (id, label) => connectionRef.current?.invoke('RenameCounter', id, label).catch(console.error)
   const updateGrid = (grid) => connectionRef.current?.invoke('UpdateGrid', grid).catch(console.error)
   const sendMessage = (msg) => connectionRef.current?.invoke('SendMessage', msg).catch(console.error)
   const createScene = (id, name, mapId) => connectionRef.current?.invoke('CreateScene', id, name, mapId).catch(console.error)
@@ -63,5 +65,5 @@ export function useVttConnection(callbacks) {
     setConnected(false)
   }
 
-  return { connected, addCounter, moveCounter, removeCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, rejoinSession, disconnect }
+  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, rejoinSession, disconnect }
 }
