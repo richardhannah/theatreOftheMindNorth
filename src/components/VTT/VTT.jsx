@@ -59,6 +59,10 @@ function VTT() {
   const [showGridPanel, setShowGridPanel] = useState(false)
   const [showCounterTray, setShowCounterTray] = useState(false)
   const [showChat, setShowChat] = useState(true)
+  const [chatFontSize, setChatFontSize] = useState(() => {
+    const saved = localStorage.getItem('vtt_chat_font_size')
+    return saved ? Number(saved) : 13
+  })
   const [chatSize, setChatSize] = useState({ w: 280, h: 50 }) // h is percentage
   const chatResizing = useRef(false)
   const chatResizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
@@ -1573,9 +1577,13 @@ function VTT() {
                   {chatCharacters.length > 1 && (
                     <button className="vtt-chat-reset" onClick={() => vttModal.openCharacters()}>Switch</button>
                   )}
+                  <span className="vtt-chat-font-controls">
+                    <button className="vtt-chat-font-btn" onClick={() => { const s = Math.max(9, chatFontSize - 1); setChatFontSize(s); localStorage.setItem('vtt_chat_font_size', s) }}>Aa-</button>
+                    <button className="vtt-chat-font-btn" onClick={() => { const s = Math.min(20, chatFontSize + 1); setChatFontSize(s); localStorage.setItem('vtt_chat_font_size', s) }}>Aa+</button>
+                  </span>
                   <button className="vtt-chat-hide" onClick={() => setShowChat(false)}>&#x2715;</button>
                 </div>
-                <div className="vtt-chat-messages" ref={chatMessagesRef}>
+                <div className="vtt-chat-messages" ref={chatMessagesRef} style={{ fontSize: `${chatFontSize}px` }}>
                   {messages.map((m, i) => (
                     <div key={i} className={`vtt-chat-msg${m.isDiceRoll ? ' vtt-chat-dice' : ''}`}>
                       {m.tokenId && tokenSrcMap[m.tokenId] ? (

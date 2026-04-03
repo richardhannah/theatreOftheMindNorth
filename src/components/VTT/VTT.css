@@ -1285,6 +1285,30 @@
   color: var(--parchment);
 }
 
+.vtt-chat-font-controls {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.vtt-chat-font-btn {
+  border: 1px solid var(--pale-gold);
+  background: transparent;
+  color: var(--pale-gold);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 2px;
+  opacity: 0.5;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.vtt-chat-font-btn:hover {
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .vtt-chat-hide {
   border: none;
   background: transparent;
@@ -1341,7 +1365,7 @@
 
 .vtt-chat-msg {
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: inherit;
   color: var(--pale-gold);
   line-height: 1.4;
   display: flex;
