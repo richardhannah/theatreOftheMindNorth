@@ -28,3 +28,6 @@ bun.lock
 
 # Claude
 .claude/settings.local.json
+CLAUDE.md
+MEMORY/
+agent-workflows/

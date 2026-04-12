@@ -1548,6 +1548,28 @@
   pointer-events: none;
 }
 
+.vtt-fog-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vtt-fog-active {
+  background: rgba(60, 0, 120, 0.3);
+  border-color: rgba(120, 60, 200, 0.8);
+  color: #fff;
+}
+
+.vtt-fog-active:hover {
+  background: rgba(80, 20, 150, 0.5);
+}
+
+.vtt-viewport-fog-mode {
+  cursor: crosshair;
+}
+
 .vtt-fine-btn {
   width: 22px;
   height: 22px;

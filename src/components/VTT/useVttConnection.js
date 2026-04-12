@@ -30,6 +30,7 @@ export function useVttConnection(callbacks) {
     connection.on('SceneDeleted', (sceneId) => cbRef.current.onSceneDeleted?.(sceneId))
     connection.on('InitiativeUpdated', (initiative) => cbRef.current.onInitiativeUpdated?.(initiative))
     connection.on('BackupRestored', () => cbRef.current.onBackupRestored?.())
+    connection.on('FogUpdated', (fog) => cbRef.current.onFogUpdated?.(fog))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -57,6 +58,7 @@ export function useVttConnection(callbacks) {
   const switchScene = (sceneId) => connectionRef.current?.invoke('SwitchScene', sceneId).catch(console.error)
   const deleteScene = (sceneId) => connectionRef.current?.invoke('DeleteScene', sceneId).catch(console.error)
   const updateInitiative = (initiative) => connectionRef.current?.invoke('UpdateInitiative', initiative).catch(console.error)
+  const updateFog = (fog) => connectionRef.current?.invoke('UpdateFog', fog).catch(console.error)
 
   const rejoinSession = () => connectionRef.current?.invoke('JoinSession').catch(console.error)
 
@@ -65,5 +67,5 @@ export function useVttConnection(callbacks) {
     setConnected(false)
   }
 
-  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, rejoinSession, disconnect }
+  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, updateFog, rejoinSession, disconnect }
 }

@@ -116,6 +116,19 @@ function VTT() {
   const [newSceneMap, setNewSceneMap] = useState(maps[0]?.id || '')
   const sceneDirtyRef = useRef(false)
 
+  // Fog of war state
+  const [fogEnabled, setFogEnabled] = useState(false)
+  const [fogMode, setFogMode] = useState(false)
+  const [fogReveals, setFogReveals] = useState([])
+  const fogDragRef = useRef(null)
+  const fogDragPreviewRef = useRef(null)
+  const fogCanvasRef = useRef(null)
+  const [mapSize, setMapSize] = useState({ w: 0, h: 0 })
+  const fogModeRef = useRef(false)
+
+  // Keep fogModeRef in sync
+  useEffect(() => { fogModeRef.current = fogMode }, [fogMode])
+
   // Backup restore state
   const [showRestoreModal, setShowRestoreModal] = useState(false)
   const [backupTimestamps, setBackupTimestamps] = useState([])
@@ -147,6 +160,8 @@ function VTT() {
           gridOpacity: isActive ? gridOpacity : 0.15,
           gridThickness: isActive ? gridThickness : 1,
           counters: isActive ? JSON.stringify(counters.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
+          fogEnabled: isActive ? fogEnabled : false,
+          fogReveals: isActive ? JSON.stringify(fogReveals) : '[]',
           isActive,
         }
       })
@@ -280,6 +295,12 @@ function VTT() {
       // Server restored from backup — re-join to get fresh state
       vtt.rejoinSession()
     },
+    onFogUpdated: (fog) => {
+      if (fog && Array.isArray(fog.reveals)) {
+        setFogReveals(fog.reveals)
+        if (fog.enabled !== undefined) setFogEnabled(fog.enabled)
+      }
+    },
   })
 
   // Register disconnect for the header button
@@ -315,6 +336,10 @@ function VTT() {
       setGridOpacity(scene.grid.gridOpacity ?? 0.15)
       setGridThickness(scene.grid.gridThickness || 1)
     }
+    // Restore fog state
+    setFogEnabled(scene.fogEnabled || false)
+    setFogReveals(scene.fogReveals || [])
+    setFogMode(false)
     // Allow sync again after React has processed the state updates
     requestAnimationFrame(() => { loadingSceneRef.current = false })
   }
@@ -390,6 +415,40 @@ function VTT() {
       gridW, gridH, gridLinked, gridOffset, gridColor, gridOpacity, gridThickness,
     }))
   }, [gridW, gridH, gridLinked, gridOffset, gridColor, gridOpacity, gridThickness])
+
+  // Draw fog of war canvas — called from useEffect and directly during drag
+  const fogRevealsRef = useRef(fogReveals)
+  fogRevealsRef.current = fogReveals
+
+  const drawFogCanvas = useCallback(() => {
+    const canvas = fogCanvasRef.current
+    if (!canvas) return
+    const { w, h } = mapSize
+    if (w === 0) return
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+    }
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, w, h)
+    ctx.fillStyle = '#000000'
+    ctx.fillRect(0, 0, w, h)
+    ctx.globalCompositeOperation = 'destination-out'
+    ctx.fillStyle = 'rgba(0,0,0,1)'
+    for (const r of fogRevealsRef.current) {
+      ctx.fillRect(r.x, r.y, r.w, r.h)
+    }
+    const preview = fogDragPreviewRef.current
+    if (preview) {
+      ctx.fillRect(preview.x, preview.y, preview.w, preview.h)
+    }
+    ctx.globalCompositeOperation = 'source-over'
+  }, [mapSize])
+
+  // Redraw fog when reveals change or fog is toggled
+  useEffect(() => {
+    if (fogEnabled) drawFogCanvas()
+  }, [fogEnabled, fogReveals, mapSize, drawFogCanvas])
 
   // Sync grid to server when grid panel closes
   const prevShowGridPanel = useRef(showGridPanel)
@@ -524,6 +583,17 @@ function VTT() {
     forceRender((n) => n + 1)
   }
 
+  // Convert screen (client) coordinates to map-space coordinates
+  const screenToMap = (e) => {
+    const rect = viewportRef.current.getBoundingClientRect()
+    const zoom = zoomRef.current
+    const pan = panRef.current
+    return {
+      x: (e.clientX - rect.left - pan.x) / zoom,
+      y: (e.clientY - rect.top - pan.y) / zoom,
+    }
+  }
+
   // Snap a position to the grid
   const snapToGrid = (x, y) => {
     const ox = gridOffset.x
@@ -558,12 +628,7 @@ function VTT() {
     const vp = viewportRef.current
     if (!vp) return
 
-    const rect = vp.getBoundingClientRect()
-    const zoom = zoomRef.current
-    const pan = panRef.current
-
-    const mapX = (e.clientX - rect.left - pan.x) / zoom
-    const mapY = (e.clientY - rect.top - pan.y) / zoom
+    const { x: mapX, y: mapY } = screenToMap(e)
 
     const newId = crypto.randomUUID()
 
@@ -704,6 +769,7 @@ function VTT() {
       x: (vp.clientWidth - img.naturalWidth) / 2,
       y: (vp.clientHeight - img.naturalHeight) / 2,
     }
+    setMapSize({ w: img.naturalWidth, h: img.naturalHeight })
     render()
   }, [render])
 
@@ -718,6 +784,13 @@ function VTT() {
       if (e.target.closest('.vtt-nav-overlay')) return
       if (e.target.closest('.vtt-chat')) return
 
+      // Fog reveal mode — start drawing a reveal rectangle
+      if (fogModeRef.current) {
+        const { x, y } = screenToMap(e)
+        fogDragRef.current = { startX: x, startY: y }
+        return
+      }
+
       if (gridDecoupledRef.current) {
         gridDragging.current = true
         gridDragStart.current = { x: e.clientX, y: e.clientY }
@@ -730,6 +803,20 @@ function VTT() {
     }
 
     const onMouseMove = (e) => {
+      // Fog reveal drag — draw preview directly on canvas to avoid React re-render per frame
+      if (fogDragRef.current) {
+        const { x: mapX, y: mapY } = screenToMap(e)
+        const sx = fogDragRef.current.startX
+        const sy = fogDragRef.current.startY
+        fogDragPreviewRef.current = {
+          x: Math.min(sx, mapX),
+          y: Math.min(sy, mapY),
+          w: Math.abs(mapX - sx),
+          h: Math.abs(mapY - sy),
+        }
+        drawFogCanvas()
+        return
+      }
       if (dragging.current) {
         panRef.current = {
           x: panStart.current.x + (e.clientX - dragStart.current.x),
@@ -747,6 +834,22 @@ function VTT() {
     }
 
     const onMouseUp = () => {
+      // Fog reveal commit
+      if (fogDragRef.current) {
+        const preview = fogDragPreviewRef.current
+        if (preview && preview.w > 2 && preview.h > 2) {
+          setFogReveals((prev) => {
+            const next = [...prev, preview]
+            vtt.updateFog({ enabled: true, reveals: next })
+            return next
+          })
+          markScenesDirty()
+        }
+        fogDragRef.current = null
+        fogDragPreviewRef.current = null
+        drawFogCanvas()
+        return
+      }
       dragging.current = false
       gridDragging.current = false
     }
@@ -1060,6 +1163,42 @@ function VTT() {
             onClick={fetchBackups}
           >
             Restore Backup
+          </button>
+        )}
+        {isDM && (
+          <button
+            className={`vtt-grid-lock-btn${fogEnabled ? ' vtt-fog-active' : ''}`}
+            onClick={() => {
+              const next = !fogEnabled
+              setFogEnabled(next)
+              if (!next) {
+                setFogMode(false)
+              }
+              vtt.updateFog({ enabled: next, reveals: fogReveals })
+              markScenesDirty()
+            }}
+          >
+            {fogEnabled ? 'Fog: ON' : 'Fog: OFF'}
+          </button>
+        )}
+        {isDM && fogEnabled && (
+          <button
+            className={`vtt-grid-lock-btn${fogMode ? ' vtt-link-active' : ''}`}
+            onClick={() => setFogMode(!fogMode)}
+          >
+            {fogMode ? 'Done Revealing' : 'Reveal Area'}
+          </button>
+        )}
+        {isDM && fogEnabled && (
+          <button
+            className="vtt-grid-lock-btn"
+            onClick={() => {
+              setFogReveals([])
+              vtt.updateFog({ enabled: true, reveals: [] })
+              markScenesDirty()
+            }}
+          >
+            Reset Fog
           </button>
         )}
         {charId && (
@@ -1471,7 +1610,7 @@ function VTT() {
         )
       })()}
       <div
-        className={`vtt-viewport${gridDecoupled ? ' vtt-viewport-grid-mode' : ''}`}
+        className={`vtt-viewport${gridDecoupled ? ' vtt-viewport-grid-mode' : ''}${fogMode ? ' vtt-viewport-fog-mode' : ''}`}
         ref={viewportRef}
       >
         <div className="vtt-canvas" ref={canvasRef}>
@@ -1487,6 +1626,15 @@ function VTT() {
               backgroundImage: `linear-gradient(to right, ${gridColor}${decoupledAlpha()} ${gridThickness}px, transparent ${gridThickness}px), linear-gradient(to bottom, ${gridColor}${decoupledAlpha()} ${gridThickness}px, transparent ${gridThickness}px)`,
             }}
           />
+          {fogEnabled && mapSize.w > 0 && (
+            <canvas
+              ref={fogCanvasRef}
+              className="vtt-fog-canvas"
+              width={mapSize.w}
+              height={mapSize.h}
+              style={{ opacity: isDM ? 0.5 : 1 }}
+            />
+          )}
           {counters.map((c) => (
             <div
               key={c.id}
