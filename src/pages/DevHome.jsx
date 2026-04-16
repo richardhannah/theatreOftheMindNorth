@@ -6,7 +6,7 @@ function DevHome() {
     <div className="dev-home">
       <h2 className="subtitle">Fortune & Glory - Season Two</h2>
       <img src={dragonImg} alt="Dragon" className="dragon" />
-      <p className="coming-soon">Coming soon...</p>
+      <p className="coming-soon">Sunday 19th April - 12pm</p>
     </div>
   )
 }
