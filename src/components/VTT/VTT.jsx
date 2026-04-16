@@ -1095,11 +1095,11 @@ function VTT() {
     <div className="vtt-outer">
       {VideoConference && (
         <div className={`vtt-video-sidebar${videoSidebarOpen ? '' : ' vtt-video-sidebar-collapsed'}`}>
-          {videoSidebarOpen && (
+          <div style={{ display: videoSidebarOpen ? 'contents' : 'none' }}>
             <Suspense fallback={null}>
               <VideoConference userName={charName} isDM={isDM} />
             </Suspense>
-          )}
+          </div>
           <button
             className="vtt-video-sidebar-toggle"
             onClick={() => setVideoSidebarOpen(!videoSidebarOpen)}
