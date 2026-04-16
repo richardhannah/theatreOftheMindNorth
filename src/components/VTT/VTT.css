@@ -1397,6 +1397,15 @@
   font-size: 12px;
 }
 
+.vtt-chat-link {
+  color: var(--gold);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.vtt-chat-link:hover {
+  color: var(--pale-gold);
+}
+
 .vtt-chat-img {
   display: block;
   max-width: 100%;

@@ -925,14 +925,20 @@ function VTT() {
     window.addEventListener('mouseup', onMouseUp)
   }
 
-  // Detect image URLs in chat text and render as <img>
-  const IMAGE_URL_RE = /(https?:\/\/\S+\.(?:png|jpe?g|gif|webp|svg)(?:\?\S*)?)(?:\s|$)/gi
+  // Detect URLs in chat text — image URLs render as <img>, others as clickable links
+  const IMAGE_EXT_RE = /\.(?:png|jpe?g|gif|webp|svg)(?:\?|$)/i
+  const URL_RE = /(https?:\/\/\S+)/gi
   const renderMessageText = (text) => {
     const parts = []
     let last = 0
-    for (const match of text.matchAll(IMAGE_URL_RE)) {
+    for (const match of text.matchAll(URL_RE)) {
       if (match.index > last) parts.push(text.slice(last, match.index))
-      parts.push(<img key={match.index} src={match[1]} alt="" className="vtt-chat-img" loading="lazy" />)
+      const url = match[1]
+      if (IMAGE_EXT_RE.test(url)) {
+        parts.push(<img key={match.index} src={url} alt="" className="vtt-chat-img" loading="lazy" />)
+      } else {
+        parts.push(<a key={match.index} href={url} target="_blank" rel="noopener noreferrer" className="vtt-chat-link">{url}</a>)
+      }
       last = match.index + match[0].length
     }
     if (last < text.length) parts.push(text.slice(last))
