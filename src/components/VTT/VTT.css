@@ -1397,6 +1397,15 @@
   font-size: 12px;
 }
 
+.vtt-chat-img {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 4px;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
 .vtt-chat-join {
   display: flex;
   flex-direction: column;

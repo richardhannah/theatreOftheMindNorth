@@ -925,6 +925,20 @@ function VTT() {
     window.addEventListener('mouseup', onMouseUp)
   }
 
+  // Detect image URLs in chat text and render as <img>
+  const IMAGE_URL_RE = /(https?:\/\/\S+\.(?:png|jpe?g|gif|webp|svg)(?:\?\S*)?)(?:\s|$)/gi
+  const renderMessageText = (text) => {
+    const parts = []
+    let last = 0
+    for (const match of text.matchAll(IMAGE_URL_RE)) {
+      if (match.index > last) parts.push(text.slice(last, match.index))
+      parts.push(<img key={match.index} src={match[1]} alt="" className="vtt-chat-img" loading="lazy" />)
+      last = match.index + match[0].length
+    }
+    if (last < text.length) parts.push(text.slice(last))
+    return parts.length > 1 || parts[0] !== text ? parts : text
+  }
+
   // Chat send
   const sendChat = (e) => {
     e.preventDefault()
@@ -1740,7 +1754,7 @@ function VTT() {
                         <InitialsToken name={m.name || '?'} size={20} />
                       )}
                       <strong>{m.name}{!m.isDiceRoll && m.playerName ? ` [${m.playerName}]` : ''}{m.isDiceRoll ? ' rolls' : ':'} </strong>
-                      {m.text}
+                      {renderMessageText(m.text)}
                     </div>
                   ))}
                 </div>
