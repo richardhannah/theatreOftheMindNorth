@@ -167,8 +167,8 @@ function VTT() {
           gridColor: isActive ? gridColor : '#ffffff',
           gridOpacity: isActive ? gridOpacity : 0.15,
           gridThickness: isActive ? gridThickness : 1,
-          counters: isActive ? JSON.stringify(countersRef.current.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
-          tiles: isActive ? JSON.stringify(mapTilesRef.current.map((t) => ({ id: t.id, tileId: t.tileId, label: t.label, x: t.x, y: t.y }))) : '[]',
+          counters: isActive ? JSON.stringify(countersRef.current.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y, hidden: c.hidden || false }))) : '[]',
+          tiles: isActive ? JSON.stringify(mapTilesRef.current.map((t) => ({ id: t.id, tileId: t.tileId, label: t.label, x: t.x, y: t.y, hidden: t.hidden || false }))) : '[]',
           fogEnabled: isActive ? fogEnabled : false,
           fogReveals: isActive ? JSON.stringify(fogReveals) : '[]',
           isActive,
@@ -248,6 +248,7 @@ function VTT() {
           x: counter.x,
           y: counter.y,
           effects: counter.effects || [],
+          hidden: counter.hidden || false,
         }]
       })
     },
@@ -320,6 +321,7 @@ function VTT() {
           label: tile.label,
           x: tile.x,
           y: tile.y,
+          hidden: tile.hidden || false,
         }]
       })
     },
@@ -330,6 +332,12 @@ function VTT() {
     },
     onTileRemoved: (id) => {
       setMapTiles((prev) => prev.filter((t) => t.id !== id))
+    },
+    onTileVisibilityChanged: (id, hidden) => {
+      setMapTiles((prev) => prev.map((t) => t.id === id ? { ...t, hidden } : t))
+    },
+    onCounterVisibilityChanged: (id, hidden) => {
+      setCounters((prev) => prev.map((c) => c.id === id ? { ...c, hidden } : c))
     },
   })
 
@@ -356,6 +364,7 @@ function VTT() {
       x: c.x,
       y: c.y,
       effects: c.effects || [],
+      hidden: c.hidden || false,
     }))
     setCounters(resolved)
     // Restore map tiles
@@ -366,6 +375,7 @@ function VTT() {
       label: t.label,
       x: t.x,
       y: t.y,
+      hidden: t.hidden || false,
     }))
     setMapTiles(resolvedTiles)
     if (scene.grid) {
@@ -681,6 +691,7 @@ function VTT() {
       x: mapX,
       y: mapY,
       effects: [],
+      hidden: false,
     }
 
     setCounters((prev) => [...prev, newCounter])
@@ -821,6 +832,7 @@ function VTT() {
       label: tile.label,
       x: mapX,
       y: mapY,
+      hidden: false,
     }
 
     setMapTiles((prev) => [...prev, newTile])
@@ -915,6 +927,18 @@ function VTT() {
   const removeTile = (tileId) => {
     setMapTiles((prev) => prev.filter((t) => t.id !== tileId))
     vtt.removeTile(tileId)
+    markScenesDirty()
+  }
+
+  const setTileHidden = (tileId, hidden) => {
+    setMapTiles((prev) => prev.map((t) => t.id === tileId ? { ...t, hidden } : t))
+    vtt.setTileVisibility(tileId, hidden)
+    markScenesDirty()
+  }
+
+  const setCounterHidden = (counterId, hidden) => {
+    setCounters((prev) => prev.map((c) => c.id === counterId ? { ...c, hidden } : c))
+    vtt.setCounterVisibility(counterId, hidden)
     markScenesDirty()
   }
 
@@ -1815,10 +1839,10 @@ function VTT() {
               style={{ opacity: isDM ? 0.5 : 1 }}
             />
           )}
-          {mapTiles.map((t) => (
+          {mapTiles.filter((t) => isDM || !t.hidden).map((t) => (
             <div
               key={t.id}
-              className={`vtt-tile${draggingTileId === t.id ? ' vtt-tile-dragging' : ''}${isDM ? ' vtt-tile-gm' : ''}`}
+              className={`vtt-tile${draggingTileId === t.id ? ' vtt-tile-dragging' : ''}${isDM ? ' vtt-tile-gm' : ''}${t.hidden ? ' vtt-tile-hidden' : ''}`}
               style={{
                 left: `${t.x}px`,
                 top: `${t.y}px`,
@@ -1833,10 +1857,10 @@ function VTT() {
               {isDM && <span className="vtt-tile-label">{t.label}</span>}
             </div>
           ))}
-          {counters.map((c) => (
+          {counters.filter((c) => isDM || !c.hidden).map((c) => (
             <div
               key={c.id}
-              className={`vtt-counter${draggingCounterId === c.id ? ' vtt-counter-dragging' : ''}`}
+              className={`vtt-counter${draggingCounterId === c.id ? ' vtt-counter-dragging' : ''}${c.hidden ? ' vtt-counter-hidden' : ''}`}
               style={{
                 left: `${c.x}px`,
                 top: `${c.y}px`,
@@ -1987,9 +2011,20 @@ function VTT() {
               onClick={(e) => e.stopPropagation()}
             >
               {contextMenu.tileId ? (
-                <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeTile(contextMenu.tileId); setContextMenu(null) }}>
-                  Remove Tile
-                </button>
+                <>
+                  {mapTiles.find((t) => t.id === contextMenu.tileId)?.hidden ? (
+                    <button className="vtt-ctx-item" onClick={() => { setTileHidden(contextMenu.tileId, false); setContextMenu(null) }}>
+                      Reveal Tile
+                    </button>
+                  ) : (
+                    <button className="vtt-ctx-item" onClick={() => { setTileHidden(contextMenu.tileId, true); setContextMenu(null) }}>
+                      Hide Tile
+                    </button>
+                  )}
+                  <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeTile(contextMenu.tileId); setContextMenu(null) }}>
+                    Remove Tile
+                  </button>
+                </>
               ) : renameState && renameState.counterId === contextMenu.counterId ? (
                 <form className="vtt-ctx-rename" onSubmit={(e) => {
                   e.preventDefault()
@@ -2017,6 +2052,15 @@ function VTT() {
                   <button className="vtt-ctx-item" onClick={() => { setStatusModal(contextMenu.counterId); setContextMenu(null) }}>
                     Status Effects
                   </button>
+                  {isDM && (counters.find((c) => c.id === contextMenu.counterId)?.hidden ? (
+                    <button className="vtt-ctx-item" onClick={() => { setCounterHidden(contextMenu.counterId, false); setContextMenu(null) }}>
+                      Reveal
+                    </button>
+                  ) : (
+                    <button className="vtt-ctx-item" onClick={() => { setCounterHidden(contextMenu.counterId, true); setContextMenu(null) }}>
+                      Hide
+                    </button>
+                  ))}
                   <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeCounter(contextMenu.counterId); setContextMenu(null) }}>
                     Remove
                   </button>

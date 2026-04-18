@@ -1065,6 +1065,13 @@
   border-radius: 4px;
 }
 
+.vtt-tile-hidden,
+.vtt-counter-hidden {
+  opacity: 0.4;
+  outline: 2px dashed rgba(245, 200, 66, 0.5);
+  outline-offset: -1px;
+}
+
 .vtt-tile-label {
   position: absolute;
   bottom: -2px;

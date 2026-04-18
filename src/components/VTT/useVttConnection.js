@@ -34,6 +34,8 @@ export function useVttConnection(callbacks) {
     connection.on('TileAdded', (tile) => cbRef.current.onTileAdded?.(tile))
     connection.on('TileMoved', (id, x, y) => cbRef.current.onTileMoved?.(id, x, y))
     connection.on('TileRemoved', (id) => cbRef.current.onTileRemoved?.(id))
+    connection.on('TileVisibilityChanged', (id, hidden) => cbRef.current.onTileVisibilityChanged?.(id, hidden))
+    connection.on('CounterVisibilityChanged', (id, hidden) => cbRef.current.onCounterVisibilityChanged?.(id, hidden))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -65,6 +67,8 @@ export function useVttConnection(callbacks) {
   const addTile = (tile) => connectionRef.current?.invoke('AddTile', tile).catch(console.error)
   const moveTile = (id, x, y) => connectionRef.current?.invoke('MoveTile', id, x, y).catch(console.error)
   const removeTile = (id) => connectionRef.current?.invoke('RemoveTile', id).catch(console.error)
+  const setTileVisibility = (id, hidden) => connectionRef.current?.invoke('SetTileVisibility', id, hidden).catch(console.error)
+  const setCounterVisibility = (id, hidden) => connectionRef.current?.invoke('SetCounterVisibility', id, hidden).catch(console.error)
 
   const rejoinSession = () => connectionRef.current?.invoke('JoinSession').catch(console.error)
 
@@ -73,5 +77,5 @@ export function useVttConnection(callbacks) {
     setConnected(false)
   }
 
-  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, updateFog, addTile, moveTile, removeTile, rejoinSession, disconnect }
+  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, updateFog, addTile, moveTile, removeTile, setTileVisibility, setCounterVisibility, rejoinSession, disconnect }
 }
