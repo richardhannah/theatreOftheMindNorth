@@ -13,10 +13,16 @@ const categories = [
 ]
 
 const images = import.meta.glob('../assets/lore/*.{png,jpeg,jpg}', { eager: true })
+const zodiacImages = import.meta.glob('../assets/zodiac/*.png', { eager: true })
 
 function getImage(filename) {
   if (!filename) return null
   const match = Object.entries(images).find(([path]) => path.endsWith(filename))
+  return match ? match[1].default : null
+}
+
+function getZodiacImage(name) {
+  const match = Object.entries(zodiacImages).find(([path]) => path.endsWith(`${name}.png`))
   return match ? match[1].default : null
 }
 
@@ -64,15 +70,32 @@ function Lore() {
           <h2>Discovered: <WorldDate shortDate={selected.dateFound} /></h2>
         )}
         <div className="lore-text">
-          {selected.content.split('\n\n').map((para, i) => (
-            <p key={i}>
-              {para.includes('\n')
-                ? para.split('\n').map((line, j) => (
-                    <span key={j}>{line}{j < para.split('\n').length - 1 && <br />}</span>
-                  ))
-                : para}
-            </p>
-          ))}
+          {selected.content.split('\n\n').map((para, i) => {
+            const zodiacMatch = para.match(/^\[zodiac:(\w+)\]([\s\S]+)/)
+            if (zodiacMatch) {
+              const src = getZodiacImage(zodiacMatch[1])
+              const headerText = zodiacMatch[2]
+              return (
+                <div key={i} className="zodiac-sign-header">
+                  {src && <img src={src} alt={zodiacMatch[1]} />}
+                  <p>
+                    {headerText.split('\n').map((line, j, arr) => (
+                      <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                    ))}
+                  </p>
+                </div>
+              )
+            }
+            return (
+              <p key={i}>
+                {para.includes('\n')
+                  ? para.split('\n').map((line, j) => (
+                      <span key={j}>{line}{j < para.split('\n').length - 1 && <br />}</span>
+                    ))
+                  : para}
+              </p>
+            )
+          })}
         </div>
         {selected.image && (
           <div className="lore-media">

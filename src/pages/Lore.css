@@ -92,6 +92,26 @@
   line-height: 1.7;
 }
 
+.zodiac-sign-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.zodiac-sign-header img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--antique-gold);
+}
+
+.zodiac-sign-header p {
+  margin: 0;
+  line-height: 1.7;
+}
+
 .lore-media {
   margin: 1.5rem 0;
 }
