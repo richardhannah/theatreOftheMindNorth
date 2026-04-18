@@ -1028,6 +1028,58 @@
 .vtt-dpad-left  { grid-area: left; }
 .vtt-dpad-right { grid-area: right; }
 
+/* Map Tiles (below counters) */
+.vtt-tile {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  transition: left 0.15s ease, top 0.15s ease;
+}
+
+.vtt-tile-gm {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.vtt-tile-gm:hover {
+  outline: 2px solid var(--antique-gold);
+  outline-offset: -1px;
+}
+
+.vtt-tile.vtt-tile-dragging {
+  transition: none;
+  z-index: 4;
+  outline: 2px solid var(--antique-gold);
+}
+
+.vtt-tile:active {
+  cursor: grabbing;
+}
+
+.vtt-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  border-radius: 4px;
+}
+
+.vtt-tile-label {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #eee;
+  font-size: 5px;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* Counters on map */
 .vtt-counter {
   position: absolute;
@@ -1214,6 +1266,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Tile tray section */
+.vtt-tray-divider {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--antique-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--antique-gold);
+  margin-top: 4px;
+}
+
+.vtt-tray-item-tile img {
+  border-radius: 4px;
 }
 
 /* Chat panel */

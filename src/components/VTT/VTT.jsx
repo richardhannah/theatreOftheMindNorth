@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import tokens from './tokens'
+import tiles from './tiles'
 import maps from './maps'
 import { useVttConnection } from './useVttConnection'
 import { useAuth } from '../../auth/AuthContext'
@@ -38,6 +39,7 @@ function loadGridSettings() {
 
 // Lookups
 const tokenSrcMap = Object.fromEntries(tokens.map((t) => [t.id, t.src]))
+const tileSrcMap = Object.fromEntries(tiles.map((t) => [t.id, t.src]))
 const mapSrcMap = Object.fromEntries(maps.map((m) => [m.id, m.src]))
 
 const GAME_TYPES = { DND: 'dnd', SHADOWRUN: 'shadowrun' }
@@ -106,7 +108,13 @@ function VTT() {
   const vttModal = useVttModal()
   const [videoSidebarOpen, setVideoSidebarOpen] = useState(true)
   const [counters, setCounters] = useState([])
+  const [mapTiles, setMapTiles] = useState([])
+  const countersRef = useRef(counters)
+  countersRef.current = counters
+  const mapTilesRef = useRef(mapTiles)
+  mapTilesRef.current = mapTiles
   const [trayFilter, setTrayFilter] = useState('')
+  const [tileFilter, setTileFilter] = useState('')
 
   // Scene state
   const [scenes, setScenes] = useState([])
@@ -159,7 +167,8 @@ function VTT() {
           gridColor: isActive ? gridColor : '#ffffff',
           gridOpacity: isActive ? gridOpacity : 0.15,
           gridThickness: isActive ? gridThickness : 1,
-          counters: isActive ? JSON.stringify(counters.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
+          counters: isActive ? JSON.stringify(countersRef.current.map((c) => ({ id: c.id, tokenId: c.tokenId, label: c.label, x: c.x, y: c.y }))) : '[]',
+          tiles: isActive ? JSON.stringify(mapTilesRef.current.map((t) => ({ id: t.id, tileId: t.tileId, label: t.label, x: t.x, y: t.y }))) : '[]',
           fogEnabled: isActive ? fogEnabled : false,
           fogReveals: isActive ? JSON.stringify(fogReveals) : '[]',
           isActive,
@@ -173,7 +182,7 @@ function VTT() {
       }).catch(() => { sceneDirtyRef.current = true })
     }, 10000)
     return () => clearInterval(interval)
-  }, [isDM, user, scenes, activeSceneId, gridW, gridH, gridOffset, gridColor, gridOpacity, gridThickness, counters])
+  }, [isDM, user, scenes, activeSceneId, gridW, gridH, gridOffset, gridColor, gridOpacity, gridThickness])
 
   // Chat state
   const [messages, setMessages] = useState([])
@@ -301,6 +310,27 @@ function VTT() {
         if (fog.enabled !== undefined) setFogEnabled(fog.enabled)
       }
     },
+    onTileAdded: (tile) => {
+      setMapTiles((prev) => {
+        if (prev.find((t) => t.id === tile.id)) return prev
+        return [...prev, {
+          id: tile.id,
+          tileId: tile.tileId,
+          src: tileSrcMap[tile.tileId] || '',
+          label: tile.label,
+          x: tile.x,
+          y: tile.y,
+        }]
+      })
+    },
+    onTileMoved: (id, x, y) => {
+      setMapTiles((prev) => prev.map((t) =>
+        t.id === id ? { ...t, x, y } : t
+      ))
+    },
+    onTileRemoved: (id) => {
+      setMapTiles((prev) => prev.filter((t) => t.id !== id))
+    },
   })
 
   // Register disconnect for the header button
@@ -328,6 +358,16 @@ function VTT() {
       effects: c.effects || [],
     }))
     setCounters(resolved)
+    // Restore map tiles
+    const resolvedTiles = (scene.tiles || []).map((t) => ({
+      id: t.id,
+      tileId: t.tileId,
+      src: tileSrcMap[t.tileId] || '',
+      label: t.label,
+      x: t.x,
+      y: t.y,
+    }))
+    setMapTiles(resolvedTiles)
     if (scene.grid) {
       setGridW(scene.grid.gridW || 20)
       setGridH(scene.grid.gridH || 20)
@@ -760,6 +800,124 @@ function VTT() {
     markScenesDirty()
   }
 
+  // Tile management (GM only)
+  const tileDragRef = useRef(null)
+  const [draggingTileId, setDraggingTileId] = useState(null)
+
+  const spawnTileFromTray = (e, tile) => {
+    if (!isDM) return
+    e.preventDefault()
+    e.stopPropagation()
+    const vp = viewportRef.current
+    if (!vp) return
+
+    const { x: mapX, y: mapY } = screenToMap(e)
+    const newId = crypto.randomUUID()
+
+    const newTile = {
+      id: newId,
+      tileId: tile.id,
+      src: tile.src,
+      label: tile.label,
+      x: mapX,
+      y: mapY,
+    }
+
+    setMapTiles((prev) => [...prev, newTile])
+    setDraggingTileId(newId)
+    tileDragRef.current = {
+      tileId: newId,
+      startMouse: { x: e.clientX, y: e.clientY },
+      startPos: { x: mapX, y: mapY },
+    }
+
+    const onMouseMove = (ev) => {
+      if (!tileDragRef.current) return
+      const dx = (ev.clientX - tileDragRef.current.startMouse.x) / zoomRef.current
+      const dy = (ev.clientY - tileDragRef.current.startMouse.y) / zoomRef.current
+      const newX = tileDragRef.current.startPos.x + dx
+      const newY = tileDragRef.current.startPos.y + dy
+      setMapTiles((prev) => prev.map((t) =>
+        t.id === newId ? { ...t, x: newX, y: newY } : t
+      ))
+    }
+
+    const onMouseUp = (ev) => {
+      if (tileDragRef.current) {
+        const dx = (ev.clientX - tileDragRef.current.startMouse.x) / zoomRef.current
+        const dy = (ev.clientY - tileDragRef.current.startMouse.y) / zoomRef.current
+        const newX = tileDragRef.current.startPos.x + dx
+        const newY = tileDragRef.current.startPos.y + dy
+        const snapped = snapToGrid(newX, newY)
+        setMapTiles((prev) => prev.map((t) =>
+          t.id === newId ? { ...t, x: snapped.x, y: snapped.y } : t
+        ))
+        vtt.addTile({ id: newId, tileId: tile.id, label: tile.label, x: snapped.x, y: snapped.y })
+        markScenesDirty()
+      }
+      tileDragRef.current = null
+      setDraggingTileId(null)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
+  const startTileDrag = (e, tileId) => {
+    if (!isDM) return
+    e.stopPropagation()
+    const tile = mapTiles.find((t) => t.id === tileId)
+    if (!tile) return
+
+    setDraggingTileId(tileId)
+    tileDragRef.current = {
+      tileId,
+      startMouse: { x: e.clientX, y: e.clientY },
+      startPos: { x: tile.x, y: tile.y },
+    }
+
+    const onMouseMove = (ev) => {
+      if (!tileDragRef.current) return
+      const dx = (ev.clientX - tileDragRef.current.startMouse.x) / zoomRef.current
+      const dy = (ev.clientY - tileDragRef.current.startMouse.y) / zoomRef.current
+      const newX = tileDragRef.current.startPos.x + dx
+      const newY = tileDragRef.current.startPos.y + dy
+      setMapTiles((prev) => prev.map((t) =>
+        t.id === tileId ? { ...t, x: newX, y: newY } : t
+      ))
+    }
+
+    const onMouseUp = (ev) => {
+      if (tileDragRef.current) {
+        const dx = (ev.clientX - tileDragRef.current.startMouse.x) / zoomRef.current
+        const dy = (ev.clientY - tileDragRef.current.startMouse.y) / zoomRef.current
+        const newX = tileDragRef.current.startPos.x + dx
+        const newY = tileDragRef.current.startPos.y + dy
+        const snapped = snapToGrid(newX, newY)
+        setMapTiles((prev) => prev.map((t) =>
+          t.id === tileId ? { ...t, x: snapped.x, y: snapped.y } : t
+        ))
+        vtt.moveTile(tileId, snapped.x, snapped.y)
+        markScenesDirty()
+      }
+      tileDragRef.current = null
+      setDraggingTileId(null)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
+  const removeTile = (tileId) => {
+    setMapTiles((prev) => prev.filter((t) => t.id !== tileId))
+    vtt.removeTile(tileId)
+    markScenesDirty()
+  }
+
   // Center the map when it loads
   const onMapLoad = useCallback((e) => {
     const img = e.target
@@ -780,6 +938,7 @@ function VTT() {
 
     const onMouseDown = (e) => {
       if (e.target.closest('.vtt-counter')) return
+      if (e.target.closest('.vtt-tile')) return
       if (e.target.closest('.vtt-counter-tray')) return
       if (e.target.closest('.vtt-nav-overlay')) return
       if (e.target.closest('.vtt-chat')) return
@@ -1168,6 +1327,7 @@ function VTT() {
             onClick={() => {
               if (confirm('Clear all counters and reset scene state? This cannot be undone.')) {
                 setCounters([])
+                setMapTiles([])
                 applyInitiativeState(INITIATIVE_RESET)
                 broadcastInitiative(INITIATIVE_RESET)
                 markScenesDirty()
@@ -1655,6 +1815,24 @@ function VTT() {
               style={{ opacity: isDM ? 0.5 : 1 }}
             />
           )}
+          {mapTiles.map((t) => (
+            <div
+              key={t.id}
+              className={`vtt-tile${draggingTileId === t.id ? ' vtt-tile-dragging' : ''}${isDM ? ' vtt-tile-gm' : ''}`}
+              style={{
+                left: `${t.x}px`,
+                top: `${t.y}px`,
+                width: `${gridW}px`,
+                height: `${gridH}px`,
+              }}
+              onMouseDown={isDM ? (e) => startTileDrag(e, t.id) : undefined}
+              onContextMenu={isDM ? (e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, tileId: t.id }) } : undefined}
+              title={t.label}
+            >
+              {t.src && <img src={t.src} alt={t.label} draggable={false} />}
+              {isDM && <span className="vtt-tile-label">{t.label}</span>}
+            </div>
+          ))}
           {counters.map((c) => (
             <div
               key={c.id}
@@ -1730,6 +1908,28 @@ function VTT() {
                   </div>
                 ))}
             </div>
+            {isDM && tiles.length > 0 && (
+              <>
+                <div className="vtt-tray-divider">Map Tiles</div>
+                <input
+                  className="vtt-tray-search"
+                  type="text"
+                  placeholder="Search tiles..."
+                  value={tileFilter}
+                  onChange={(e) => setTileFilter(e.target.value)}
+                />
+                <div className="vtt-tray-list vtt-tray-list-tiles">
+                  {tiles
+                    .filter((t) => t.label.toLowerCase().includes(tileFilter.toLowerCase()))
+                    .map((t) => (
+                      <div key={t.id} className="vtt-tray-item vtt-tray-item-tile" onMouseDown={(e) => spawnTileFromTray(e, t)}>
+                        <img src={t.src} alt={t.label} draggable={false} />
+                        <span className="vtt-tray-item-label">{t.label}</span>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
         )}
         {/* Chat Panel */}
@@ -1786,7 +1986,11 @@ function VTT() {
               style={{ left: contextMenu.x, top: contextMenu.y }}
               onClick={(e) => e.stopPropagation()}
             >
-              {renameState && renameState.counterId === contextMenu.counterId ? (
+              {contextMenu.tileId ? (
+                <button className="vtt-ctx-item vtt-ctx-item-danger" onClick={() => { removeTile(contextMenu.tileId); setContextMenu(null) }}>
+                  Remove Tile
+                </button>
+              ) : renameState && renameState.counterId === contextMenu.counterId ? (
                 <form className="vtt-ctx-rename" onSubmit={(e) => {
                   e.preventDefault()
                   renameCounter(renameState.counterId, renameState.label)

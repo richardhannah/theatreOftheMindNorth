@@ -31,6 +31,9 @@ export function useVttConnection(callbacks) {
     connection.on('InitiativeUpdated', (initiative) => cbRef.current.onInitiativeUpdated?.(initiative))
     connection.on('BackupRestored', () => cbRef.current.onBackupRestored?.())
     connection.on('FogUpdated', (fog) => cbRef.current.onFogUpdated?.(fog))
+    connection.on('TileAdded', (tile) => cbRef.current.onTileAdded?.(tile))
+    connection.on('TileMoved', (id, x, y) => cbRef.current.onTileMoved?.(id, x, y))
+    connection.on('TileRemoved', (id) => cbRef.current.onTileRemoved?.(id))
 
     connection.onclose(() => setConnected(false))
     connection.onreconnected(() => {
@@ -59,6 +62,9 @@ export function useVttConnection(callbacks) {
   const deleteScene = (sceneId) => connectionRef.current?.invoke('DeleteScene', sceneId).catch(console.error)
   const updateInitiative = (initiative) => connectionRef.current?.invoke('UpdateInitiative', initiative).catch(console.error)
   const updateFog = (fog) => connectionRef.current?.invoke('UpdateFog', fog).catch(console.error)
+  const addTile = (tile) => connectionRef.current?.invoke('AddTile', tile).catch(console.error)
+  const moveTile = (id, x, y) => connectionRef.current?.invoke('MoveTile', id, x, y).catch(console.error)
+  const removeTile = (id) => connectionRef.current?.invoke('RemoveTile', id).catch(console.error)
 
   const rejoinSession = () => connectionRef.current?.invoke('JoinSession').catch(console.error)
 
@@ -67,5 +73,5 @@ export function useVttConnection(callbacks) {
     setConnected(false)
   }
 
-  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, updateFog, rejoinSession, disconnect }
+  return { connected, addCounter, moveCounter, removeCounter, renameCounter, updateGrid, sendMessage, createScene, switchScene, deleteScene, updateInitiative, updateFog, addTile, moveTile, removeTile, rejoinSession, disconnect }
 }
